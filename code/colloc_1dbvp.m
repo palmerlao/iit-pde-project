@@ -24,8 +24,8 @@ for N=[4 8 12 16 20 24];
     % translated basis
     tmp = repmat(colloc_pts, N, 1);
     colloc_mat = [D2f(tmp',tmp)   zeros(N,2); 
-                  f(colloc_pts,0) 1 0;
-                  f(colloc_pts,1) 1 1];
+                  f(0, colloc_pts) 1 0;
+                  f(1, colloc_pts) 1 1];
     coef = colloc_mat\[rhs(colloc_pts)';0;0]; % include 0 bc
     
     % newton basis
