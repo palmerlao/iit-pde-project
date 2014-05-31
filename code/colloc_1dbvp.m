@@ -2,7 +2,7 @@ clear all; close all; clc
 
 % Solves u'' = 1 + e^(2x), u(0) = 0 = u(1)
 
-epsilon = 350;
+epsilon = 100;
 K   = @(x,center) ( exp(-epsilon.*((x-center).^2)) );
 D1K = @(x,center) ( -2.*epsilon.*(x-center).*K(x,center) );
 D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).* ...
@@ -27,13 +27,6 @@ for N=[4 8 12 16 20 24];
                   K(1, colloc_pts) 1 1]; % for BCs
     coef = colloc_mat\[rhs(colloc_pts)';0;0];
     
-    % newton basis
-    lambda = zeros(N,1);
-    for i=2:N;
-        lambda(i) = rhs(colloc_pts(i)) - lambda(i-1);
-    end
-    
-
     u_numeric = @(x) ( [K(x,colloc_pts) 1 x]*coef );
     plot(pts, arrayfun(u_numeric, pts), colors(1));
     colors = colors(2:end);
