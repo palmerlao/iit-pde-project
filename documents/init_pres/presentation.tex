@@ -128,7 +128,7 @@ Illinois Institute of Technology, Clarkson University \\ % Your institution for 
 \frametitle{Newton Basis Refresher}
 \begin{itemize}
 \item Each basis element is of the form $v_j = \prod_{i=0}^{j-1}(x-x_i)$
-\item The $j$th basis element evaluated at $x_i$ is 0 whenever $i \geq j$. This results in a lower triangular interpolation matrix
+\item The $j$th basis element evaluated at $x_i$ is 0 whenever $i < j$. This results in a lower triangular interpolation matrix
 \item The matrix is better conditioned as well as easier to solve numerically, although the coefficients can be found using divided differences instead
 \end{itemize}
 \end{frame}
@@ -155,9 +155,20 @@ Illinois Institute of Technology, Clarkson University \\ % Your institution for 
 \frametitle{Collocation for solving PDEs numerically}
 \begin{itemize}
 \item Collocation is closely related to interpolation, and the collocation matrix may also suffer from conditioning issues
-\item Suppose we wish to solve $Lu = f(x)$, where $L$ is a known linear operator. Again, assume $u(x) \approx \sum_{j=0}^n c_j K(x, x_j)$
+\item Suppose we wish to solve $Lu = f$, where $L$ is a known linear operator. Again, assume $u(x) \approx \sum_{j=0}^n c_j K(x, x_j)$
 \item Then we need to solve  $(LK(x_i, x_j))_{i,j=0}^n \mathbf{c} = \mathbf{f} = (f(x_i))_{i=0}^n$ for $\mathbf{c}$ 
-\item We hope to figure out how to rewrite the differentiated kernels as a sort of Newton basis to improve conditioning in the collocation matrix.
+\item We hope to figure out how to differentiate the Newton basis elements to improve conditioning in the collocation matrix.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Another way of solving PDEs numerically}
+\begin{itemize}
+\item From our expansion of $u$ as a combination of our basis functions, we have the following system: $\mathbf{K}\mathbf{c} = \mathbf{u}$
+\item Instead of forcing the solution to satisfy constraints at collocation points, create a pointwise approximation to the linear operator using a matrix.
+\item We need a matrix $D$ such that $D \mathbf{u} \approx \left( Lu(x_i) \right)_{i=0}^n \approx D \mathbf{K} \mathbf{c} $.
+\item Choose $D = LK(x_i, x_j) _{i,j=0}^n \mathbf{K}^{-1}$, then $D\mathbf{u} \approx D\mathbf{K}\mathbf{c} = \left( Lu(x_i) \right)_{i=0}^n \mathbf{c} = \mathbf{f}$. 
+\item We need to invert $D$ to get values of $u$
 \end{itemize}
 \end{frame}
 

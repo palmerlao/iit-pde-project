@@ -3,7 +3,7 @@ function [] = colloc_1dbvp()
 
     % Solves u'' = 1 + e^(2x), u(0) = 0 = u(1)
 
-    epsilon = 400;
+    epsilon = 200;
     K   = @(x,center) ( exp(-epsilon.*((x-center).^2)) );
     D1K = @(x,center) ( -2.*epsilon.*(x-center).*K(x,center) );
     D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).* ...
