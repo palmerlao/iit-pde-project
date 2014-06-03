@@ -20,7 +20,6 @@ function [] = colloc_1dbvp()
     %% Calculate and plot numerical solution
     for N=[12 20 28];
         colloc_pts = linspace(0,1,N);
-
         tmp = repmat(colloc_pts, N, 1);
         KM = K(tmp',tmp);
         D2KM = D2K(tmp',tmp);
@@ -37,7 +36,7 @@ function [] = colloc_1dbvp()
         D2V_ = B\D2KM; % maybe bad if D2KM is ill-cond.
         colloc_mat = [D2V_'   zeros(N,2);
                       V(:,1)' 1 0;
-                      V(:,2)' 1 1];
+                      V(:,N)' 1 1];
         coef = colloc_mat\[rhs(colloc_pts)';0;0];
 
         plot(colloc_pts, coef'*[V;ones(1,N);colloc_pts], [colors(2) '*:']);
