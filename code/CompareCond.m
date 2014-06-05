@@ -7,7 +7,7 @@ set(0,'defaultLineLineWidth',3) %thick lines
 
 
 Nstart = 1;
-Nend = 100;
+Nend = 101;
 
 condPlotK = zeros(1, Nend - Nstart);
 condPlotKTilda = zeros(1, Nend - Nstart);
