@@ -4,10 +4,10 @@ set(0,'defaultLineLineWidth',3) %thick lines
 
 
 
-
+subplot(1, 2, 1);
 
 Nstart = 1;
-Nend = 101;
+Nend = 100;
 
 condPlotK = zeros(1, Nend - Nstart);
 condPlotKTilda = zeros(1, Nend - Nstart);
@@ -48,9 +48,8 @@ for N = Nstart : 1 : Nend
     [B, VMatrix] = calculate_beta_v(KMatrix, N, samplePoints, K);
     condPlotV(N-Nstart+1) = cond(VMatrix);
     
-    %P = L * M' = L * (K^-1 * V)' = L*(K\V)'
-    PMatrix = LMatrix*(KMatrix\VMatrix)'; %may cause problems
-    
+    %should work since L is linear operator (double check)
+    [B, PMatrix] = calculate_beta _vector(LMatrix, N, samplePoints, D2K);
     condPlotP(N-Nstart+1) = cond(PMatrix);
 
 end
@@ -67,6 +66,23 @@ end
     legend('K Matrix', 'K~ Matrix', 'L Matrix', 'L~ Matrix', 'V Matrix', 'P Matrix', 'Location', 'NorthWest');
     ylabel('Condition Number');
     xlabel('Number of points sampled');
+
+
+   subplot(1, 2, 2);
+    hold on;
+    plot(Nstart:1:Nend, (condPlotK./condPlotL), ':g')
+    plot(Nstart:1:Nend, (condPlotKTilda./condPlotLTilda), 'g')
+    plot(Nstart:1:Nend, (condPlotV./condPlotP), ':r')
+    
+    title('Ratio of Condition Numbers');
+    legend('K/L', 'K~/L~', 'V/P', 'Location', 'NorthWest');
+    ylabel('Ratios');
+    xlabel('Number of points sampled');
+
+    %see what ratios are 
+    %KLRatio = condPlotK (100)/condPlotL(100)
+    %KLTildaRatio = condPlotKTilda (100)/condPlotLTilda(100)
+    %VPRatio = condPlotV (100)/condPlotP(100)
 
 end
 
