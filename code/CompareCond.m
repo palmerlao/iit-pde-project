@@ -19,7 +19,7 @@ condPlotP = zeros(1, Nend - Nstart);
 for N = Nstart : 1 : Nend
    %fix K and take derivatives (taken from Palmer's code)
    %epsilon = 200;
-   epsilon = (N/3).^2;
+   epsilon = (N/4).^2;
    K = @(x, point) exp(-epsilon.*(x-point).^2);
    %D1K = @(x,center) ( -2.*epsilon.*(x-center).*K(x,center) );
    D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).*K(x,center));
@@ -49,7 +49,7 @@ for N = Nstart : 1 : Nend
     condPlotV(N-Nstart+1) = cond(VMatrix);
     
     %should work since L is linear operator (double check)
-    [B, PMatrix] = calculate_beta _vector(LMatrix, N, samplePoints, D2K);
+    [B, PMatrix] = calculate_beta_v(LMatrix, N, samplePoints, D2K);
     condPlotP(N-Nstart+1) = cond(PMatrix);
 
 end
@@ -83,6 +83,7 @@ end
     %KLRatio = condPlotK (100)/condPlotL(100)
     %KLTildaRatio = condPlotKTilda (100)/condPlotLTilda(100)
     %VPRatio = condPlotV (100)/condPlotP(100)
+    condPlotV(end)
 
 end
 
@@ -92,20 +93,33 @@ function [B, V] = calculate_beta_v(KM, N, xs, K)
 % other (see paper for relationship). B should be lower triangular,
 % and V should be unit upper triangular s.t. KM = B*V
     B = zeros(N,N);
+    B1 = zeros(N,N);    
     V = eye(N);
     for c=1:(N-1)
         for i=c:N
-            B(i,c) = calculate_single_beta(B,V,i,c,K,xs);
+            B(i,c) = calculate_single_beta(B,V,i,c,K,xs,1);
+            B1(i,c) = calculate_single_beta(B,V,i,c,K,xs,2);
+            disc=abs(B(i,c)-B1(i,c));
+            if disc>1e4*eps, disc, end
         end
         % not sure if this is bad when KM is ill-cond.
         V(1:c,c+1) = B(1:c,1:c)\KM(1:c,c+1);
     end
-    B(N,N) = calculate_single_beta(B,V,N,N,K,xs);
+    B(N,N) = calculate_single_beta(B,V,N,N,K,xs,1);
+    B1(N,N) = calculate_single_beta(B,V,N,N,K,xs,2);
+    disc=abs(B(N,N)-B1(N,N));
+    if disc>1e4*eps, disc, end
+
 end
 
-function [res] = calculate_single_beta(B, V, i, j, K, xs)
+function [res] = calculate_single_beta(B, V, i, j, K, xs,opt)
+%if j==1, keyboard, end
+if opt==2
+   res = K(xs(j), xs(i)) - B(i,1:(j-1))*V(1:(j-1),j);
+else
 res = K(xs(j), xs(i));
     for k=1:j-1
         res = res - B(i,k).*V(k,j);
     end
+end
 end
