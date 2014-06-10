@@ -11,6 +11,8 @@
 \newcommand{\mK}{\mathsf{K}}
 \newcommand{\mL}{\mathsf{L}}
 \newcommand{\mM}{\mathsf{M}}
+\newcommand{\vp}{\boldsymbol{p}}
+\newcommand{\mP}{\mathsf{P}}
 \newcommand{\tu}{\tilde{u}}
 \newcommand{\vu}{\boldsymbol{u}}
 \newcommand{\vv}{\boldsymbol{v}}
@@ -35,39 +37,40 @@ According to the Schaback paper, there is another basis $\{v_1, \ldots, v_n\}$ w
 \begin{equation*}
 \spann\{v_1, \ldots, v_j\}=\spann\{K(\cdot,x_1), \ldots, K(\cdot, x_j)\}, \qquad v_j(x_j)=1, \qquad v_j(x_i)=0, \ i=0, \ldots, j-1.
 \end{equation*}
-Thus, so $\vv(x) = \mM \vk(x)$ for some appropriate $\mM$ independent of $x$ but dependent on $\{x_1, \ldots, x_n\}$.
+Thus, so $\vv(x) = \mM \vk(x)$ for some appropriate lower triangular matrix $\mM$, which is independent of $x$ but dependent on $\{x_1, \ldots, x_n\}$.
 If we have some values of the function, $u$, i.e., $\vu=(u(x_1), \ldots, u(x_n))^T$, then interpolation yields:
 \begin{gather*}
-\mK=(K(x_i,x_j))_{i,j=1}^n, \qquad \mV=(v_j(x_i))_{i,j=1}^n, \qquad \mV=\mK \mM^{T} \\
+\mK=(K(x_i,x_j))_{i,j=1}^n, \qquad \mV=(v_j(x_i))_{i,j=1}^n, \qquad \mV=\mK \mM^T \\
 u(x) =  \vk^T(x) \vc =  \vv^T(x) \vd, \qquad \vc=\mK^{-1} \vu, \qquad \vd=\mV^{-1} \vu = \mM^{-T} \vc,
 \end{gather*}
 where $\mV$ is lower triangular.
 
 Now let $L$ be some known linear operator, e.g., a differential operator.  If you would like to construct $Lu(x)$, given the $u(x_i)$ values, then
-\[
-Lu(x) \approx L \tu(x) = \vl^T(x) \vc = \vl^T(x) \mK^{-1} \vu = \vl^T(x) \mM^{T} \mV^{-1} \vu,\qquad \vl(x)=(L(K(\cdot,x_j)))_{j=1}^n.
-\]
-So $\mV^{-1}\vu$ should be stable and easy to solve.  Perhaps $\mM\vl(x)$ is easy to solve too. 
+\begin{gather*}
+Lu(x) \approx L \tu(x) = \vl^T(x) \vc = \vl^T(x) \mK^{-1} \vu = \vl^T(x) \mM^T \mV^{-1} \vu = \vp^T(x) \mV^{-1} \vu,\\
+ \vl(x):=(l_j)_{j=1}^n:=(L(K(\cdot,x_j)))_{j=1}^n, \qquad \vp(x):= (p_j)_{j=1}^n:=(L(v_j)(x))_{j=1}^n = \mM\vl(x).
+\end{gather*}
+So $\mV^{-1}\vu$ should be stable and easy to solve.
 
 Suppose that we want to solve a differential equation
 \[
 Lu(x) = f(x), \qquad u(x)=?,
 \]
-where $f$ is some known function and $L$ may now include the boundary conditions.  Now I am stuck.  My guess is that we would use interpolation, and thus require
+where $f$ is some known function and $L$ may now include the boundary conditions.  Using collocation requires
 \[
 L \tu(x_i) = f(x_i), \ i=1, \ldots, n,
 \]
 which leads to 
 \[
-\tu(x) =  \vk^T(x) \vc, \qquad \text{where }\mL \vc = \vf, \qquad \mL=(l_j(x_i))_{i,j=1}^n=(L(K(\cdot,x_i))(x_i))_{i,j=1}^n, \qquad \vf=(f(x_i))_{i=1}^n.
+\tu(x) =  \vk^T(x) \vc, \qquad \text{where }\mL \vc = \vf, \qquad \mL=(l_j(x_i))_{i,j=1}^n=(L(K(\cdot,x_j))(x_i))_{i,j=1}^n, \qquad \vf=(f(x_i))_{i=1}^n.
 \]
-If I have to invert $\mL$ it may be bad.  I can write this alternatively as 
-\[
-\tu(x) =  \vv^T(x) \vd, \qquad \text{where }\mL \mM \vd = \vf.
-\]
-But whereas above we had $\mK\mM=\mV$, a nice easily invertible, lower triangular matrix, now we have $\mL\mM=$ I don't know.
+If we have to invert $\mL$, it may be bad.  
 
-Little help please.
+Alternatively, we can write this as as 
+\begin{gather*}
+\tu(x) =  \vv^T(x) \vd, \qquad \text{where }\mL \mM^T \vd = \mP \vd= \vf, \\
+\mL \mM^T = \mP:= (p_j(x_i))_{i,j=1}^n=(L(v_j)(x_i))_{i,j=1}^n,
+\end{gather*}
 
 
 

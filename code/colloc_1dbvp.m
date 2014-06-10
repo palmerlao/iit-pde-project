@@ -1,86 +1,95 @@
 function [] = colloc_1dbvp()
     clear all; close all; clc
+    %% Garbage collection and initialization
+    format compact %remove blank lines from output
 
     % Solves u'' = 1 + e^(2x), u(0) = 0 = u(1)
 
-    epsilon = 200;
-    K   = @(x,center) ( exp(-epsilon.*((x-center).^2)) );
-    D1K = @(x,center) ( -2.*epsilon.*(x-center).*K(x,center) );
-    D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).* ...
-                        K(x,center) );
 
     rhs = @(x) ( 1 + exp(2.*x) );
     u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
 
     pts = linspace(0,1);
-    subplot(1,2,1);
-    hold on;
-    colors = 'grcmyk';
 
-    %% Calculate and plot numerical solution
-    for N=[12 20 28];
+    %% Calculate condition numbers of collocation matrices and
+    %  calculate error of numerical solutions
+
+    trans_err_cond = zeros(2,50);
+    newt_err_cond  = zeros(2,50);
+    newt2_err_cond = zeros(2,50);
+    for N=2:2:100;
+        
+        epsilon = 200;
+        K   = @(x,center) ( exp(-epsilon.*((x-center).^2)) );
+        D1K = @(x,center) ( -2.*epsilon.*(x-center).*K(x,center) );
+        D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).* ...
+                            K(x,center) );
+
         colloc_pts = linspace(0,1,N);
         tmp = repmat(colloc_pts, N, 1);
         KM = K(tmp',tmp);
         D2KM = D2K(tmp',tmp);
+        KM_evals = K( repmat(pts',1,size(colloc_pts,2)), repmat(colloc_pts,size(pts,2),1));
         
-        % translated basis
         colloc_mat = [D2KM             zeros(N,2); 
-                      K(0, colloc_pts) 1 0;  % we need 1 + x term
-                      K(1, colloc_pts) 1 1]; % for BCs
-        coef = colloc_mat\[rhs(colloc_pts)';0;0];
-        u_numeric = @(x) ( [K(x,colloc_pts) 1 x]*coef );
-        plot(pts, arrayfun(u_numeric, pts), colors(1));
+                      K(0, colloc_pts) 1 0;
+                      K(1, colloc_pts) 1 1];
+        coef = colloc_mat\[rhs(colloc_pts)';0;0;];
+
+        trans_err_cond(1,N/2) = norm(([KM_evals ones(size(pts,2),1) pts']*coef) ...
+                                   -u_analytic(pts)',Inf);
+        trans_err_cond(2,N/2) = cond(colloc_mat);
         
         [B, V] = calculate_beta_v(KM, N, colloc_pts, K);
-        D2V_ = B\D2KM; % maybe bad if D2KM is ill-cond.
-        colloc_mat = [D2V_'   zeros(N,2);
+        D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
+        colloc_mat = [D2V'    zeros(N,2);
                       V(:,1)' 1 0;
-                      V(:,N)' 1 1];
-        coef = colloc_mat\[rhs(colloc_pts)';0;0];
+                      V(:,2)' 1 1];
+        coef = colloc_mat\[rhs(colloc_pts)';0;0;];
 
-        plot(colloc_pts, coef'*[V;ones(1,N);colloc_pts], [colors(2) '*:']);
+        newt_err_cond(1,N/2) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
+                                  -u_analytic(pts)',Inf);
+        newt_err_cond(2,N/2) = cond(colloc_mat);
 
-        colors = colors(3:end);
+        [B, D2V] = calculate_beta_v(D2KM, N, colloc_pts, D2K);
+        V = B\KM;
+        colloc_mat = [D2V'    zeros(N,2);
+                      V(:,1)' 1 0;
+                      V(:,2)' 1 1];
+        coef = colloc_mat\[rhs(colloc_pts)';0;0;];
+
+        newt2_err_cond(1,N/2) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
+                                  -u_analytic(pts)',Inf);
+        newt2_err_cond(2,N/2) = cond(colloc_mat);
+
     end
+    
+    subplot(1,2,1);
+    hold on;    
+    plot(2:2:100, trans_err_cond(1,:), 'b*-');
+    plot(2:2:100, newt_err_cond(1,:), 'go-');
+    plot(2:2:100, newt2_err_cond(1,:), 'r+-');
+    title('||u_n-u||_\infty, when \epsilon_n=n^2/16');
+    legend('Usual basis',  ...
+           'Newton basis', ...
+           'differentiated kernel Newton basis');
+    ylabel('Error');
+    xlabel('# of collocation points');
 
-    plot(pts, u_analytic(pts));
-    title('Solution to u\prime\prime = 1+exp(2x), u(0) = 0 = u(1)');
-    legend('12, translate', ...
-           '12, Newton', ...
-           '20, translate', ...
-           '20, Newton', ...
-           '28, translate', ...
-           '28, Newton', ...
-           'analytic');
-
-    %% Calculate condition numbers of collocation matrices
-    trans_cond = zeros(1,100);
-    newt_cond = zeros(1,100);
-    for N=2:100;
-        colloc_pts = linspace(0,1,N);
-        tmp = repmat(colloc_pts, N, 1);
-        KM = K(tmp',tmp);
-        D2KM = D2K(tmp',tmp);
-        
-        trans_cond(N) = cond([D2KM  zeros(N,2); 
-                              K(0, colloc_pts) 1 0;
-                              K(1, colloc_pts) 1 1]);
-        [B, V] = calculate_beta_v(KM, N, colloc_pts, K);
-        D2V_ = B\D2KM; % maybe bad if D2KM is ill-cond.
-        newt_cond(N) = cond([D2V_'   zeros(N,2);
-                             V(:,1)' 1 0;
-                             V(:,2)' 1 1]);
-    end
 
     subplot(1,2,2);
     hold on;
-    semilogy(log(trans_cond), 'b*-');
-    semilogy(log(newt_cond), 'go-');
-    title('log log of condition number of collocation matrices for N points');
-    legend('translated basis', 'Newton basis');
-    ylabel('log of log of condition number');
+    semilogy(2:2:100, log10(trans_err_cond(2,:)), 'b*-');
+    semilogy(2:2:100, log10(newt_err_cond(2,:)), 'go-');
+    semilogy(2:2:100, log10(newt2_err_cond(2,:)), 'r+-');
+    title('log_{10} of condition number of collocation matrices for N points');
+    ylabel('log_{10} of condition number');
     xlabel('N');
+end
+
+function [B, V] = chol_calc_beta_v(KM, N, xs, K)
+    B = chol(KM);
+    V = B';
 end
 
 function [B, V] = calculate_beta_v(KM, N, xs, K)
