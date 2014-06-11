@@ -1,6 +1,5 @@
 function [] = colloc_1dbvp()
     clear all; close all; clc
-    %% Garbage collection and initialization
     format compact %remove blank lines from output
 
     % Solves u'' = 1 + e^(2x), u(0) = 0 = u(1)
@@ -39,8 +38,11 @@ function [] = colloc_1dbvp()
         trans_err_cond(1,N/2) = norm(([KM_evals ones(size(pts,2),1) pts']*coef) ...
                                    -u_analytic(pts)',Inf);
         trans_err_cond(2,N/2) = cond(colloc_mat);
-        
-        [B, V] = calculate_beta_v(KM, N, colloc_pts, K);
+        if all(eig(KM)>0)
+            [B, V] = chol_calc_beta_v(KM, N, colloc_pts, K);
+        else
+            break
+        end
         D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
         colloc_mat = [D2V'    zeros(N,2);
                       V(:,1)' 1 0;
@@ -61,11 +63,10 @@ function [] = colloc_1dbvp()
         newt2_err_cond(1,N/2) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
                                   -u_analytic(pts)',Inf);
         newt2_err_cond(2,N/2) = cond(colloc_mat);
-
     end
     
     subplot(1,2,1);
-    hold on;    
+    hold on;
     plot(2:2:100, trans_err_cond(1,:), 'b*-');
     plot(2:2:100, newt_err_cond(1,:), 'go-');
     plot(2:2:100, newt2_err_cond(1,:), 'r+-');
