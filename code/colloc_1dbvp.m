@@ -19,7 +19,8 @@ function [] = colloc_1dbvp()
     newt2_err_cond = zeros(2,50);
     for N=2:2:100;
         
-        epsilon = 200;
+        %epsilon = 200;
+        epsilon = (N/4).^2;
         K   = @(x,center) ( exp(-epsilon.*((x-center).^2)) );
         D1K = @(x,center) ( -2.*epsilon.*(x-center).*K(x,center) );
         D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).* ...
@@ -64,11 +65,11 @@ function [] = colloc_1dbvp()
 
     end
     
-    subplot(1,2,1);
-    hold on;    
-    plot(2:2:100, trans_err_cond(1,:), 'b*-');
-    plot(2:2:100, newt_err_cond(1,:), 'go-');
-    plot(2:2:100, newt2_err_cond(1,:), 'r+-');
+    subplot(1,2,1);  
+    loglog(2:2:100, trans_err_cond(1,:), 'b*-');
+    hold on;  
+    loglog(2:2:100, newt_err_cond(1,:), 'go-');
+    loglog(2:2:100, newt2_err_cond(1,:), 'r+-');
     title('||u_n-u||_\infty, when \epsilon_n=n^2/16');
     legend('Usual basis',  ...
            'Newton basis', ...
@@ -78,10 +79,10 @@ function [] = colloc_1dbvp()
 
 
     subplot(1,2,2);
+    semilogy(2:2:100, trans_err_cond(2,:), 'b*-');
     hold on;
-    semilogy(2:2:100, log10(trans_err_cond(2,:)), 'b*-');
-    semilogy(2:2:100, log10(newt_err_cond(2,:)), 'go-');
-    semilogy(2:2:100, log10(newt2_err_cond(2,:)), 'r+-');
+    semilogy(2:2:100, newt_err_cond(2,:), 'go-');
+    semilogy(2:2:100, newt2_err_cond(2,:), 'r+-');
     title('log_{10} of condition number of collocation matrices for N points');
     ylabel('log_{10} of condition number');
     xlabel('N');

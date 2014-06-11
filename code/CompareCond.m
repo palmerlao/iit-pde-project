@@ -15,7 +15,10 @@ condPlotL = zeros(1, Nend - Nstart);
 condPlotLTilda = zeros(1, Nend - Nstart);
 condPlotV = zeros(1, Nend - Nstart);
 condPlotP = zeros(1, Nend - Nstart);
-
+f=@(x) 1+exp(2*x);
+u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
+errL=zeros(1,Nend-Nstart);
+errP=zeros(1,Nend-Nstart);
 for N = Nstart : 1 : Nend
    %fix K and take derivatives (taken from Palmer's code)
    %epsilon = 200;
@@ -25,6 +28,8 @@ for N = Nstart : 1 : Nend
    D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).*K(x,center));
 
     samplePoints = linspace(0, 1, N);
+    fsample=f(samplePoints)';
+    usample=u_analytic(samplePoints)';
     temp = repmat(samplePoints, N, 1);
     %Kernel matrix
     KMatrix = K(temp', temp);
@@ -44,6 +49,11 @@ for N = Nstart : 1 : Nend
     condPlotL(N-Nstart+1) = cond(LMatrix);
     condPlotLTilda(N-Nstart+1) = cond(LMatrixTilda);
     
+    %keyboard
+    uL=[KMatrix ones(N,1) samplePoints']*(LMatrixTilda\[fsample;0;0]);
+    errL(N-Nstart+1)=max(abs(usample-uL));
+    
+    
     %%Newton Basis
     [B, VMatrix] = calculate_beta_v(KMatrix, N, samplePoints, K);
     condPlotV(N-Nstart+1) = cond(VMatrix);
@@ -51,6 +61,13 @@ for N = Nstart : 1 : Nend
     %should work since L is linear operator (double check)
     [B, PMatrix] = calculate_beta_v(LMatrix, N, samplePoints, D2K);
     condPlotP(N-Nstart+1) = cond(PMatrix);
+     PMatrixTilda = [PMatrix zeros(N, 2);
+               VMatrix(:,1)' 1 0;
+               VMatrix(:,end)' 1 1];
+
+    uP=[VMatrix ones(N,1) samplePoints']*(PMatrixTilda\[fsample;0;0]);
+    errP(N-Nstart+1)=max(abs(usample-uP));
+
 
 end
 
@@ -78,6 +95,9 @@ end
     legend('K/L', 'K~/L~', 'V/P', 'Location', 'NorthWest');
     ylabel('Ratios');
     xlabel('Number of points sampled');
+    
+    figure
+    semilogy(Nstart:1:Nend,errL,'g',Nstart:1:Nend,errP,'r')
 
     %see what ratios are 
     %KLRatio = condPlotK (100)/condPlotL(100)
