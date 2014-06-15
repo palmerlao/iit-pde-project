@@ -9,9 +9,8 @@ function [] = colloc_1dbvp()
 
     pts = linspace(0,1);
     
-    stride = 2;
-    num_Ns = 50;
-    Ns = stride:stride:(stride*num_Ns);
+    Ns = ceil(1.4.^(1:17));
+    num_Ns=numel(Ns);
     
     %% Calculate condition numbers of collocation matrices and
     %  calculate error of numerical solutions
@@ -20,9 +19,10 @@ function [] = colloc_1dbvp()
     newt_err_cond  = zeros(2,num_Ns);
     newt2_err_cond = zeros(2,num_Ns);
     
-    for N=Ns;
+    for i=1:num_Ns;
+       N=Ns(i);
         
-        epsilon = (N/4).^2;
+        epsilon = (N/8).^2;
         K   = @(x,center) ( exp(-epsilon.*((x-center).^2)) );
         D1K = @(x,center) ( -2.*epsilon.*(x-center).*K(x,center) );
         D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).* ...
@@ -40,9 +40,9 @@ function [] = colloc_1dbvp()
                       K(1, colloc_pts) 1 1];
         coef = colloc_mat\[rhs(colloc_pts)';0;0;];
 
-        trans_err_cond(1,N/stride) = norm(([KM_evals ones(size(pts,2),1) pts']*coef) ...
+        trans_err_cond(1,i) = norm(([KM_evals ones(size(pts,2),1) pts']*coef) ...
                                           -u_analytic(pts)',Inf);
-        trans_err_cond(2,N/stride) = cond(colloc_mat);
+        trans_err_cond(2,i) = cond(colloc_mat);
 
         % Creating a Newton basis for span{ K(\cdot, x_1), ... }
         [B, V] = calculate_beta_v(KM, N, colloc_pts, K);
@@ -52,9 +52,9 @@ function [] = colloc_1dbvp()
                       V(:,N)' 1 1];
         coef = colloc_mat\[rhs(colloc_pts)';0;0;];
 
-        newt_err_cond(1,N/stride) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
+        newt_err_cond(1,i) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
                                   -u_analytic(pts)',Inf);
-        newt_err_cond(2,N/stride) = cond(colloc_mat);
+        newt_err_cond(2,i) = cond(colloc_mat);
 
         % Creating a Newton basis for span{ LK(\cdot, x_1), ... }        
         [B, D2V] = calculate_beta_v(D2KM, N, colloc_pts, D2K);
@@ -64,9 +64,9 @@ function [] = colloc_1dbvp()
                       V(:,N)' 1 1];
         coef = colloc_mat\[rhs(colloc_pts)';0;0;];
 
-        newt2_err_cond(1,N/stride) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
+        newt2_err_cond(1,i) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
                                    -u_analytic(pts)',Inf);
-        newt2_err_cond(2,N/stride) = cond(colloc_mat);
+        newt2_err_cond(2,i) = cond(colloc_mat);
         
     end    
 
