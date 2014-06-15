@@ -1,4 +1,3 @@
-function [] = CompareCond()
 clear all; close all; clc;
 set(0,'defaultLineLineWidth',3) %thick lines
 
@@ -104,42 +103,3 @@ end
     %KLTildaRatio = condPlotKTilda (100)/condPlotLTilda(100)
     %VPRatio = condPlotV (100)/condPlotP(100)
     condPlotV(end)
-
-end
-
-
-function [B, V] = calculate_beta_v(KM, N, xs, K)
-% here we alternately calculate betas and vs since they depend on each
-% other (see paper for relationship). B should be lower triangular,
-% and V should be unit upper triangular s.t. KM = B*V
-    B = zeros(N,N);
-    B1 = zeros(N,N);    
-    V = eye(N);
-    for c=1:(N-1)
-        for i=c:N
-            B(i,c) = calculate_single_beta(B,V,i,c,K,xs,1);
-            B1(i,c) = calculate_single_beta(B,V,i,c,K,xs,2);
-            disc=abs(B(i,c)-B1(i,c));
-            if disc>1e4*eps, disc, end
-        end
-        % not sure if this is bad when KM is ill-cond.
-        V(1:c,c+1) = B(1:c,1:c)\KM(1:c,c+1);
-    end
-    B(N,N) = calculate_single_beta(B,V,N,N,K,xs,1);
-    B1(N,N) = calculate_single_beta(B,V,N,N,K,xs,2);
-    disc=abs(B(N,N)-B1(N,N));
-    if disc>1e4*eps, disc, end
-
-end
-
-function [res] = calculate_single_beta(B, V, i, j, K, xs,opt)
-%if j==1, keyboard, end
-if opt==2
-   res = K(xs(j), xs(i)) - B(i,1:(j-1))*V(1:(j-1),j);
-else
-res = K(xs(j), xs(i));
-    for k=1:j-1
-        res = res - B(i,k).*V(k,j);
-    end
-end
-end
