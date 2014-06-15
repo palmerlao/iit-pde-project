@@ -9,8 +9,8 @@ function [] = colloc_1dbvp()
 
     pts = linspace(0,1);
     
-    stride = 25;
-    num_Ns = 10;
+    stride = 2;
+    num_Ns = 50;
     Ns = stride:stride:(stride*num_Ns);
     
     %% Calculate condition numbers of collocation matrices and
@@ -89,8 +89,8 @@ function [] = colloc_1dbvp()
     hold on;
     semilogy(Ns, newt_err_cond(2,:), 'go-');
     semilogy(Ns, newt2_err_cond(2,:), 'r+-');
-    title('log_{10} of condition number of collocation matrices for N points');
-    ylabel('log_{10} of condition number');
+    title('condition number of collocation matrices for N points');
+    ylabel('condition number');
     xlabel('N');
 end
 
