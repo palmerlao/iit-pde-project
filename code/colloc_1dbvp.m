@@ -34,36 +34,50 @@ for i=1:num_Ns;
     KM_evals = K( repmat(pts',1,size(colloc_pts,2)), repmat(colloc_pts,size(pts,2),1));
 
     % usual basis
-    colloc_mat = [D2KM(2:end-1,:)     zeros(N-2,2); 
-                  K(0, colloc_pts)    1 0;
-                  K(1, colloc_pts)    1 1];
+% $$$     colloc_mat = [D2KM(2:end-1,:)     zeros(N-2,2); 
+% $$$                   K(0, colloc_pts)    1 0;
+% $$$                   K(1, colloc_pts)    1 1];
+    colloc_mat = [D2KM(2:end-1,:);
+                  K(0,colloc_pts);
+                  K(1, colloc_pts)];
     coef = colloc_mat\[rhs(colloc_pts(2:end-1))';0;0;];
 
-    trans_err_cond(1,i) = norm(([KM_evals ones(size(pts,2),1) pts']*coef) ...
-                               -u_analytic(pts)',Inf);
+% $$$     trans_err_cond(1,i) = norm(([KM_evals ones(size(pts,2),1) pts']*coef) ...
+% $$$                                -u_analytic(pts)',Inf);
+    trans_err_cond(1,i) = norm(([KM_evals]*coef)-u_analytic(pts)',Inf);
     trans_err_cond(2,i) = cond(colloc_mat);
 
     % Creating a Newton basis for span{ K(\cdot, x_1), ... }
     [B, V] = calculate_beta_v(KM, N, colloc_pts, K);
     D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
-    colloc_mat = [D2V(:,2:end-1)'    zeros(N-2,2);
-                  V(:,1)'            1 0;
-                  V(:,N)'            1 1];
+% $$$     colloc_mat = [D2V(:,2:end-1)'    zeros(N-2,2);
+% $$$                   V(:,1)'            1 0;
+% $$$                   V(:,N)'            1 1];
+    colloc_mat = [D2V(:,2:end-1)';
+                  V(:,1)';
+                  V(:,N)'];
     coef = colloc_mat\[rhs(colloc_pts(2:end-1))';0;0;];
 
-    newt_err_cond(1,i) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
+% $$$     newt_err_cond(1,i) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
+% $$$                               -u_analytic(pts)',Inf);
+    newt_err_cond(1,i) = norm(([(B\KM_evals')']*coef) ...
                               -u_analytic(pts)',Inf);
     newt_err_cond(2,i) = cond(colloc_mat);
 
     % Creating a Newton basis for span{ LK(\cdot, x_1), ... }        
     [B, D2V] = calculate_beta_v(D2KM, N, colloc_pts, D2K);
     V = B\KM;
-    colloc_mat = [D2V(:,2:end-1)'    zeros(N-2,2);
-                  V(:,1)'            1 0;
-                  V(:,N)'            1 1];
+% $$$     colloc_mat = [D2V(:,2:end-1)'    zeros(N-2,2);
+% $$$                   V(:,1)'            1 0;
+% $$$                   V(:,N)'            1 1];
+    colloc_mat = [D2V(:,2:end-1)';
+                  V(:,1)';
+                  V(:,N)'];
     coef = colloc_mat\[rhs(colloc_pts(2:end-1))';0;0;];
 
-    newt2_err_cond(1,i) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
+% $$$     newt2_err_cond(1,i) = norm(([(B\KM_evals')' ones(size(pts,2),1) pts']*coef) ...
+% $$$                                -u_analytic(pts)',Inf);
+    newt2_err_cond(1,i) = norm(([(B\KM_evals')']*coef) ...
                                -u_analytic(pts)',Inf);
     newt2_err_cond(2,i) = cond(colloc_mat);
     

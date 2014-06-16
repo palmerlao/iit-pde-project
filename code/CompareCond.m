@@ -54,11 +54,11 @@ for N = Nstart : 1 : Nend
     
     
     %%Newton Basis
-    [B, VMatrix] = calculate_beta_v(KMatrix, N, samplePoints, K);
+    [B, VMatrix] = calculate_beta_v(KMatrix);
     condPlotV(N-Nstart+1) = cond(VMatrix);
     
     %should work since L is linear operator (double check)
-    [B, PMatrix] = calculate_beta_v(LMatrix, N, samplePoints, D2K);
+    [B, PMatrix] = calculate_beta_v(LMatrix);
     condPlotP(N-Nstart+1) = cond(PMatrix);
      PMatrixTilda = [PMatrix zeros(N, 2);
                VMatrix(:,1)' 1 0;
