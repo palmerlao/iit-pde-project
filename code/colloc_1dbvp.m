@@ -48,7 +48,7 @@ for i=1:num_Ns;
     trans_err_cond(2,i) = cond(colloc_mat);
 
     % Creating a Newton basis for span{ K(\cdot, x_1), ... }
-    [B, V] = calculate_beta_v(KM, N, colloc_pts, K);
+    [B, V] = calculate_beta_v(KM);
     D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
 % $$$     colloc_mat = [D2V(:,2:end-1)'    zeros(N-2,2);
 % $$$                   V(:,1)'            1 0;
@@ -65,7 +65,7 @@ for i=1:num_Ns;
     newt_err_cond(2,i) = cond(colloc_mat);
 
     % Creating a Newton basis for span{ LK(\cdot, x_1), ... }        
-    [B, D2V] = calculate_beta_v(D2KM, N, colloc_pts, D2K);
+    [B, D2V] = calculate_beta_v(D2KM);
     V = B\KM;
 % $$$     colloc_mat = [D2V(:,2:end-1)'    zeros(N-2,2);
 % $$$                   V(:,1)'            1 0;
