@@ -6,9 +6,9 @@ format compact %remove blank lines from output
 rhs = @(x) ( 1 + exp(2.*x) );
 u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
 
-pts = linspace(0,1);
+pts = linspace(0,1,20);
 
-Ns = ceil(1.4.^(1:17));
+Ns = [8 16 32];
 num_Ns=numel(Ns);
 
 %% Calculate condition numbers of collocation matrices and
@@ -22,7 +22,7 @@ newt3_err_cond = zeros(2,num_Ns);
 for i=1:num_Ns;
     N=Ns(i);
     
-    epsilon = (N/8).^2;
+    epsilon = (N/5).^2;
     K   = @(x,center) ( exp(-epsilon.*((x-center).^2)) );
     D1K = @(x,center) ( -2.*epsilon.*(x-center).*K(x,center) );
     D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).* ...
@@ -70,17 +70,22 @@ for i=1:num_Ns;
     V = calculate_newton_basis(KM);
     B = V';
     D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
-    colloc_mat = [D2V(2:end-1,:);
+    colloc_mat = [D2V(:,2:end-1)';
                   V(1,:);
                   V(N,:)];
     coef = colloc_mat\[rhs(colloc_pts(2:end-1))';0;0;];
 
+    subplot(1,3,i)
+    hold on;
+    plot(colloc_pts,V*coef,'g*')
+    plot(pts,u_analytic(pts),'b-');
+    %    plot(pts,[(B\KM_evals')']*coef,'rd');
     newt3_err_cond(1,i) = norm(([(B\KM_evals')']*coef) ...
                               -u_analytic(pts)',Inf);
-    newt3_err_cond(2,i) = cond(colloc_mat);
-    
+    newt3_err_cond(2,i) = cond(colloc_mat);    
 end    
 
+figure;
 subplot(1,2,1);  
 loglog(Ns, trans_err_cond(1,:), 'b*-');
 hold on;

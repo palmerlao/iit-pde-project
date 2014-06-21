@@ -5,7 +5,7 @@ function [V] = calculate_newton_basis(KM)
     u = zeros(N,1);
 
     % get first column of value matrix
-    V(:,1) = KM(:,1)./ sqrt(KM(1,1));
+    V(:,1) = KM(:,1)./ sqrt(abs(KM(1,1)));
     z = diag(KM);
     w = w + V(:,1).^2;
     for i=2:N
