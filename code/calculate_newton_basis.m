@@ -10,7 +10,7 @@ function [V] = calculate_newton_basis(KM)
     w = w + V(:,1).^2;
     for i=2:N
         V(:,i) = (KM(i,:)' - V(:,1:(i-1))*V(i,1:(i-1))') ...
-                  ./ sqrt(z(i)-w(i));
+                  ./ sqrt(abs(z(i)-w(i)));
         w = w + V(:,i).^2;    
     end
 end
