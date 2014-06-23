@@ -28,6 +28,7 @@ disc_time = 0:dt:3;
 u_numeric = zeros(length(disc_time),length(ic));
 u_numeric(1,:) = ic;
 
+% explicit euler
 % $$$ for i=2:length(disc_time)
 % $$$     u_numeric(i,:) = u_numeric(i-1,:) + (0.25.*dt.*D*u_numeric(i-1,:)')';
 % $$$     u_numeric(i,[1,end]) = [0 0];
@@ -37,8 +38,7 @@ u_numeric(1,:) = ic;
 
 %% plot movies of analytic soln
 figure;
-pts = linspace(0,2);
-title('solution to 4u_t = u_xx');
+
 for i=1:length(disc_time)
     plot(pts,u_analytic(pts,disc_time(i)),colloc_pts,u_numeric(i,:),'gd--');
     axis([0 2 -1 5]);
