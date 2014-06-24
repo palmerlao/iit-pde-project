@@ -20,8 +20,8 @@ condPlotV = zeros(1, NEnd - NStart);
 condPlotVTilda = zeros(1, NEnd - NStart);
 condPlotP = zeros(1, NEnd - NStart);
 condPlotPTilda = zeros(1, NEnd - NStart);
-f=@(x) 1+exp(2*x);
-u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
+f=@(x) (x-1).^2;
+u_analytic = @(x) (x.^4)/12 - (x.^3)/3 + (x.^2)/2;
 errL=zeros(1,NEnd-NStart);
 errP=zeros(1,NEnd-NStart);
 for N = NVector
@@ -47,8 +47,7 @@ for N = NVector
     %For this example, L = 2nd derivative
     LMatrix = D2K(temp', temp);
     LMatrixTilda = [D2K(temp', temp) zeros(N, 2);
-               K(0, samplePoints) 1 0;
-               K(1, samplePoints) 1 1];
+               zeros(2, N) [1 0; 0 1]];
     cond(KMatrix);
     condPlotK(count) = cond(KMatrix);
     condPlotKTilda(count) = cond(KMatrixTilda);
@@ -74,8 +73,7 @@ for N = NVector
     [B, PMatrix] = calculate_beta_v(LMatrix, N, samplePoints, D2K);
     condPlotP(count) = cond(PMatrix);
      PMatrixTilda = [PMatrix zeros(N, 2);
-               VMatrix(:,1)' 1 0;
-               VMatrix(:,end)' 1 1];
+               zeros(2, N) [1 0; 0 1]];
 
     condPlotPTilda(count) = cond(PMatrixTilda);
     uP=[VMatrix ones(N,1) samplePoints']*(PMatrixTilda\[fsample;0;0]);
