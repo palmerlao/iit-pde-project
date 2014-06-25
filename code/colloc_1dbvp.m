@@ -8,7 +8,7 @@ u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
 
 pts = linspace(0,1);
 
-Ns = ceil(1.4.^(1:17));
+Ns = ceil(1.4.^(1:9));
 num_Ns=numel(Ns);
 
 %% Calculate condition numbers of collocation matrices and
@@ -44,7 +44,8 @@ for i=1:num_Ns;
     trans_err_cond(2,i) = cond(colloc_mat);
 
     % Creating a Newton basis for span{ K(\cdot, x_1), ... }
-    [B, V] = calculate_beta_v(KM);
+    %    [B, V] = calculate_beta_v(KM);
+    [B,V] = calculate_beta_v(KM);
     D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
     colloc_mat = [D2V(:,2:end-1)';
                   V(:,1)';
@@ -53,6 +54,10 @@ for i=1:num_Ns;
 
     newt_err_cond(1,i) = norm(([(B\KM_evals')']*coef) ...
                               -u_analytic(pts)',Inf);
+    if any(isnan(colloc_mat))
+        dbstop
+    end
+    
     newt_err_cond(2,i) = cond(colloc_mat);
 
     % Creating a Newton basis for span{ LK(\cdot, x_1), ... }        
@@ -67,12 +72,12 @@ for i=1:num_Ns;
                                -u_analytic(pts)',Inf);
     newt2_err_cond(2,i) = cond(colloc_mat);
 
-    V = calculate_newton_basis(KM);
+    V = calculate_newton_basis(KM)';
     B = V';
     D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
-    colloc_mat = [D2V(2:end-1,:);
-                  V(1,:);
-                  V(N,:)];
+    colloc_mat = [D2V(:,2:end-1)';
+                  V(:,1)';
+                  V(:,N)'];
     coef = colloc_mat\[rhs(colloc_pts(2:end-1))';0;0;];
 
     newt3_err_cond(1,i) = norm(([(B\KM_evals')']*coef) ...
@@ -92,7 +97,7 @@ title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n^2/16');
 legend('Usual basis',  ...
        'Newton basis', ...
        'differentiated kernel Newton basis', ...
-       'new strat');
+       '2011 Newton basis');
 ylabel('Error');
 xlabel('# of collocation points');
 

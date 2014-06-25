@@ -83,6 +83,16 @@ for i=1:num_Ns
     newt2_err_cond(1,i) = norm(([(B\EKM')']*coef)-g(pts),Inf);
     newt2_err_cond(2,i) = cond(colloc_mat);
     
+    % Creating a Newton basis using the 2011 strat
+    VM = calculate_newton_basis(KM)';
+    B = VM';
+    LVM = B\LKM; % maybe bad if D2KM is ill-cond.
+    colloc_mat = [LVM(:,interior_pts_ind)'
+                  VM(:,dirichlet_pts_ind)'];
+    coef = colloc_mat\rhs;
+
+    newt3_err_cond(1,i) = norm(([(B\EKM')']*coef)-g(pts),Inf);
+    newt3_err_cond(2,i) = cond(colloc_mat);
 end
 
 subplot(2,2,4);
@@ -94,11 +104,13 @@ loglog(Ns, trans_err_cond(1,:), 'b*-');
 hold on;  
 loglog(Ns, newt_err_cond(1,:), 'go-');
 loglog(Ns, newt2_err_cond(1,:), 'r+-');
+loglog(Ns, newt3_err_cond(1,:), 'yd-');
 
 title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n^2/16');
 legend('Usual basis',  ...
        'Newton basis', ...
-       'differentiated kernel Newton basis');
+       'differentiated kernel Newton basis', ...
+       'Newton basis (2011)');
 ylabel('Error');
 xlabel('# of collocation points');
 
@@ -108,6 +120,7 @@ semilogy(Ns, trans_err_cond(2,:), 'b*-');
 hold on;
 semilogy(Ns, newt_err_cond(2,:), 'go-');
 semilogy(Ns, newt2_err_cond(2,:), 'r+-');
+semilogy(Ns, newt3_err_cond(2,:), 'yd-');
 title('condition number of collocation matrices for N points');
 ylabel('condition number');
 xlabel('N');
