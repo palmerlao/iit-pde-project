@@ -1,5 +1,6 @@
 clear all; close all; clc
 format compact %remove blank lines from output
+warning('off','MATLAB:nearlySingularMatrix'); % suppress cond. warnings
 
 % Solves u'' = 1 + e^(2x), u(0) = 0 = u(1)
 
@@ -8,7 +9,7 @@ u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
 
 pts = linspace(0,1);
 
-Ns = ceil(1.4.^(1:17));
+Ns = ceil(1.4.^(1:20));
 num_Ns=numel(Ns);
 
 %% Calculate condition numbers of collocation matrices and
@@ -69,10 +70,11 @@ for i=1:num_Ns;
     newt2_err_cond(2,i) = cond(colloc_mat);
 
     V = calculate_newton_basis(KM)';
-
+    if any(isnan(V))
+        disp(['found nan in V, N=' num2str(N)]);
+    end
+    
     B = V';
-    if any(isnan(V)), keyboard, end
-    if any(isnan(B)), keyboard, end
     D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
     colloc_mat = [D2V(:,2:end-1)';
                   V(:,1)';

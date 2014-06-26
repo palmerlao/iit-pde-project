@@ -1,5 +1,6 @@
 clear all; close all; clc
 format compact %remove blank lines from output
+warning('off','MATLAB:nearlySingularMatrix'); % suppress cond. warnings
 
 % Lu = f on \Omega = (0,1)x(0,1), where L is the Laplacian
 % u = g on bdry
@@ -7,7 +8,7 @@ format compact %remove blank lines from output
 f = @(x) (-5.*pi.^2.*sin(pi.*x(:,1)).*cos(2.*pi.*x(:,2)));
 g = @(x) (sin(pi.*x(:,1)).*cos(2.*pi.*x(:,2)));
 
-Ns = [3 4 5];
+Ns = [3 4 5 ];
 num_Ns=numel(Ns);
 
 for i=1:num_Ns
