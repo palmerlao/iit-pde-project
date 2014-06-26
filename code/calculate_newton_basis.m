@@ -11,10 +11,18 @@ function [V] = calculate_newton_basis(KM)
     V(:,1) = KM(:,1)./ sqrt(max(abs(z)));
     w = w + V(:,1).^2;
     for i=2:N
-        [zm, zmind] = max(z-w);
+
+        [zm, zmind] = max(abs(z-w));
+        if zm < eps*10
+            disp('power fcn below eps*10');
+            V = V(:,1:(i-1));
+            break
+        end
+        
         V(:,i) = (KM(:,zmind) - V(:,1:i)*V(zmind,1:i)') ...
                   ./ sqrt(abs(z(zmind)-w(zmind)));
         w = w + V(:,i).^2;
         zminds(i) = zmind;
     end
+    
 end

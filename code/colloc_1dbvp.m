@@ -8,7 +8,7 @@ u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
 
 pts = linspace(0,1);
 
-Ns = ceil(1.4.^(1:9));
+Ns = ceil(1.4.^(1:17));
 num_Ns=numel(Ns);
 
 %% Calculate condition numbers of collocation matrices and
@@ -54,10 +54,6 @@ for i=1:num_Ns;
 
     newt_err_cond(1,i) = norm(([(B\KM_evals')']*coef) ...
                               -u_analytic(pts)',Inf);
-    if any(isnan(colloc_mat))
-        dbstop
-    end
-    
     newt_err_cond(2,i) = cond(colloc_mat);
 
     % Creating a Newton basis for span{ LK(\cdot, x_1), ... }        
@@ -73,7 +69,10 @@ for i=1:num_Ns;
     newt2_err_cond(2,i) = cond(colloc_mat);
 
     V = calculate_newton_basis(KM)';
+
     B = V';
+    if any(isnan(V)), keyboard, end
+    if any(isnan(B)), keyboard, end
     D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
     colloc_mat = [D2V(:,2:end-1)';
                   V(:,1)';
