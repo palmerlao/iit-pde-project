@@ -9,7 +9,7 @@ u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
 
 pts = linspace(0,1);
 
-Ns = ceil(1.4.^(1:20));
+Ns = ceil(1.4.^(1:17));
 num_Ns=numel(Ns);
 
 %% Calculate condition numbers of collocation matrices and

@@ -19,7 +19,7 @@ function [V] = calculate_newton_basis(KM)
         [zm, zmind] = max(abs(z-w));
         if zm < eps*10
             disp(['power fcn below eps*10, only using ' num2str(i-1) ...
-                 'pts']);
+                 '/' num2str(size(KM,1)) 'pts']);
             V = V(:,1:(i-1));
             break
         end
