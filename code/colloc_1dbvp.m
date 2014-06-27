@@ -108,7 +108,7 @@ semilogy(Ns, trans_err_cond(2,:), 'b*-');
 hold on;
 semilogy(Ns, newt_err_cond(2,:), 'go-');
 semilogy(Ns, newt2_err_cond(2,:), 'r+-');
-semilogy(Ns, newt3_err_cond(1,:), 'yd-');
+semilogy(Ns, newt3_err_cond(2,:), 'yd-');
 title('condition number of collocation matrices for N points');
 ylabel('condition number');
 xlabel('N');
