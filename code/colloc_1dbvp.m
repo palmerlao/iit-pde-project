@@ -35,7 +35,7 @@ for i=1:num_Ns;
     D2KM = D2K(tmp',tmp);
     KM_evals = K( repmat(pts',1,size(colloc_pts,2)), repmat(colloc_pts,size(pts,2),1));
 
-    % usual basis
+    %% usual basis
     colloc_mat = [D2KM(2:end-1,:);
                   K(0,colloc_pts);
                   K(1, colloc_pts)];
@@ -44,10 +44,10 @@ for i=1:num_Ns;
     trans_err_cond(1,i) = norm(([KM_evals]*coef)-u_analytic(pts)',Inf);
     trans_err_cond(2,i) = cond(colloc_mat);
 
-    % Creating a Newton basis for span{ K(\cdot, x_1), ... }
+    %% Creating a Newton basis for span{ K(\cdot, x_1), ... }
     %    [B, V] = calculate_beta_v(KM);
     [B,V] = calculate_beta_v(KM);
-    D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
+    D2V = B\D2KM;
     colloc_mat = [D2V(:,2:end-1)';
                   V(:,1)';
                   V(:,N)'];
@@ -57,7 +57,7 @@ for i=1:num_Ns;
                               -u_analytic(pts)',Inf);
     newt_err_cond(2,i) = cond(colloc_mat);
 
-    % Creating a Newton basis for span{ LK(\cdot, x_1), ... }        
+    %% Creating a Newton basis for span{ LK(\cdot, x_1), ... }
     [B, D2V] = calculate_beta_v(D2KM);
     V = B\KM;
     colloc_mat = [D2V(:,2:end-1)';
@@ -69,13 +69,10 @@ for i=1:num_Ns;
                                -u_analytic(pts)',Inf);
     newt2_err_cond(2,i) = cond(colloc_mat);
 
-    V = calculate_newton_basis(KM)';
-    if any(isnan(V))
-        disp(['found nan in V, N=' num2str(N)]);
-    end
-    
-    B = V';
-    D2V = B\D2KM; % maybe bad if D2KM is ill-cond.
+    %% Adaptive strategy
+    B = calculate_newton_basis(KM);
+    V = B';
+    D2V = B\D2KM;
     colloc_mat = [D2V(:,2:end-1)';
                   V(:,1)';
                   V(:,N)'];

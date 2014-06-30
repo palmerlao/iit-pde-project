@@ -1,4 +1,5 @@
-clear all; close all; clc
+function [] = colloc_poisson(epsilon)
+close all;
 format compact %remove blank lines from output
 warning('off','MATLAB:nearlySingularMatrix'); % suppress cond. warnings
 
@@ -14,7 +15,7 @@ num_Ns=numel(Ns);
 for i=1:num_Ns
     N=Ns(i);
 
-    epsilon = 15;
+
     K   = @(x,center) ( exp(-epsilon.*(norm(x-center).^2)) );
     D1K = @(x,center,ind) ( -2.*epsilon.*(x(ind)-center(ind)).*K(x(ind),center(ind)) );
     D2K = @(x,center,ind) ( 2.*epsilon.*(2.*epsilon.*((x(ind)-center(ind)).^2)-1).* ...
@@ -58,7 +59,7 @@ for i=1:num_Ns
                   KM(dirichlet_pts_ind,:)];
     coef = colloc_mat\rhs;
     
-    subplot(2,2,i);
+    subplot(2,4,4+i);
     meshc(ex,ey,reshape(EKM*coef,10,10));
 
     trans_err_cond(1,i) = norm((EKM*coef)-g(pts),Inf);
@@ -85,8 +86,8 @@ for i=1:num_Ns
     newt2_err_cond(2,i) = cond(colloc_mat);
     
     % Creating a Newton basis using the 2011 strat
-    VM = calculate_newton_basis(KM)';
-    B = VM';
+    [B,zminds] = calculate_newton_basis(KM);
+    VM = B';
     LVM = B\LKM; % maybe bad if D2KM is ill-cond.
     colloc_mat = [LVM(:,interior_pts_ind)'
                   VM(:,dirichlet_pts_ind)'];
@@ -94,9 +95,12 @@ for i=1:num_Ns
 
     newt3_err_cond(1,i) = norm(([(B\EKM')']*coef)-g(pts),Inf);
     newt3_err_cond(2,i) = cond(colloc_mat);
+    subplot(2,4,i)
+    axis([-.1 1.1 -.1 1.1])
+    plot(colloc_pts(zminds,1),colloc_pts(zminds,2),'bo:');
 end
 
-subplot(2,2,4);
+subplot(2,4,8);
 meshc(ex,ey,reshape(g(pts),10,10));
 
 figure
@@ -125,3 +129,4 @@ semilogy(Ns, newt3_err_cond(2,:), 'yd-');
 title('condition number of collocation matrices for N points');
 ylabel('condition number');
 xlabel('N');
+end
