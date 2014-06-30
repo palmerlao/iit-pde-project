@@ -1,5 +1,4 @@
-function [] = colloc_poisson(epsilon)
-close all;
+clear all; close all; clc;
 format compact %remove blank lines from output
 warning('off','MATLAB:nearlySingularMatrix'); % suppress cond. warnings
 
@@ -15,6 +14,7 @@ num_Ns=numel(Ns);
 for i=1:num_Ns
     N=Ns(i);
 
+    epsilon=15;
 
     K   = @(x,center) ( exp(-epsilon.*(norm(x-center).^2)) );
     D1K = @(x,center,ind) ( -2.*epsilon.*(x(ind)-center(ind)).*K(x(ind),center(ind)) );
@@ -129,4 +129,3 @@ semilogy(Ns, newt3_err_cond(2,:), 'yd-');
 title('condition number of collocation matrices for N points');
 ylabel('condition number');
 xlabel('N');
-end
