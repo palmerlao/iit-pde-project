@@ -1,4 +1,4 @@
-function [V, varargout] = calculate_newton_basis(KM)
+function [V, varargout] = calculate_newton_basis(KM,tol_mult)
     N = size(KM,1);
     V = zeros(N,N);
     w = zeros(N,1);
@@ -17,8 +17,8 @@ function [V, varargout] = calculate_newton_basis(KM)
         end
         
         [zm, zmind] = max(abs(z-w));
-        if zm < eps*10
-            disp(['power fcn below eps*10, only using ' num2str(i-1) ...
+        if zm < eps*tol_mult
+            disp(['power fcn below eps*' num2str(tol_mult)  ', only using ' num2str(i-1) ...
                  '/' num2str(size(KM,1)) 'pts']);
             zminds = zminds(1:(i-1));
             V = V(:,1:(i-1));

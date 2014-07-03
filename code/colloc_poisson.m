@@ -12,6 +12,8 @@ Ns = [3:2:25];
 eN = 100;
 num_Ns=numel(Ns);
 
+tol_mult = 30;
+
 trans_err_cond = zeros(2,num_Ns);
 newt_err_cond  = zeros(2,num_Ns);
 newt2_err_cond = zeros(2,num_Ns);
@@ -82,32 +84,32 @@ for i=1:num_Ns
     newt2_err_cond(1,i) = norm(([(B\EKM')']*coef)-g([ex ey]),Inf);
     newt2_err_cond(2,i) = cond(colloc_mat);
 
-% $$$     [B, zminds] = calculate_newton_basis(KM);
-% $$$     VM = B';
-% $$$     LVM = B\LKM;
-% $$$     colloc_mat = [LVM(:,interior_pts_ind)';
-% $$$                   VM(:,dirichlet_pts_ind)'];
-% $$$     coef = colloc_mat\rhs;
-% $$$ 
-% $$$     newt3_err_cond(1,i) = norm(([(B\EKM')']*coef)-g([ex ey]),Inf);
-% $$$     if all(all(isnan(colloc_mat))) || all(all(isinf(colloc_mat)))
-% $$$         newt3_err_cond(2,i) = NaN;
-% $$$     else
-% $$$         newt3_err_cond(2,i) = cond(colloc_mat);
-% $$$     end
-% $$$     zs_used(i) = numel(zminds);
+    [B, zminds] = calculate_newton_basis(KM,tol_mult);
+    VM = B';
+    LVM = B\LKM;
+    colloc_mat = [LVM(:,interior_pts_ind)';
+                  VM(:,dirichlet_pts_ind)'];
+    coef = colloc_mat\rhs;
+
+    newt3_err_cond(1,i) = norm(([(B\EKM')']*coef)-g([ex ey]),Inf);
+    if all(all(isnan(colloc_mat))) || all(all(isinf(colloc_mat)))
+        newt3_err_cond(2,i) = NaN;
+    else
+        newt3_err_cond(2,i) = cond(colloc_mat);
+    end
+    zs_used(i) = numel(zminds);
     
     %    subplot(1,num_Ns+1,i);
     %    surfc(reshape(ex,eN,eN),reshape(ey,eN,eN),reshape(EKM*coef,eN,eN));
 end
 %subplot(1,num_Ns+1,num_Ns+1)
 %surfc(reshape(ex,eN,eN),reshape(ey,eN,eN),reshape(g([ex ey]),eN,eN));
-subplot(1,2,1);
+subplot(1,3,1);
 loglog(Ns.^2,trans_err_cond(1,:),'b*-');
 hold on;
 loglog(Ns.^2, newt_err_cond(1,:), 'go-');
 loglog(Ns.^2, newt2_err_cond(1,:), 'r+-');
-%loglog(Ns.^2, newt3_err_cond(1,:), 'md-');
+loglog(Ns.^2, newt3_err_cond(1,:), 'md-');
 title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n/8');
 legend('Usual basis',  ...
        'Newton basis', ...
@@ -117,12 +119,16 @@ ylabel('Error');
 xlabel('# of collocation points');
 
 
-subplot(1,2,2);
+subplot(1,3,2);
 semilogy(Ns.^2,trans_err_cond(2,:),'b*-');
 hold on;
 semilogy(Ns.^2, newt_err_cond(2,:), 'go-');
 semilogy(Ns.^2, newt2_err_cond(2,:), 'r+-');
-%semilogy(Ns.^2, newt3_err_cond(2,:), 'md-');
+semilogy(Ns.^2, newt3_err_cond(2,:), 'md-');
 title('condition number of collocation matrices for N points');
 ylabel('condition number');
-xlabel('N');
+xlabel('# of collocation points');
+
+subplot(1,3,3)
+plot(Ns.^2, zs_used./(Ns.^2),'b*-');
+title(['percentage of points used in adaptive strategy, tol. mult. = ' num2str(tol_mult)]);

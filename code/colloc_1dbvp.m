@@ -9,6 +9,8 @@ u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
 
 pts = linspace(0,1);
 
+tol_mult = 10;
+
 Ns = ceil(1.4.^(1:17));
 Ns(end-1) = 217; %218 is magic in a bad way
 zs_used = zeros(1,numel(Ns));
@@ -73,7 +75,7 @@ for i=1:num_Ns;
     newt2_err_cond(2,i) = cond(colloc_mat);
 
     %% Adaptive strategy
-    [B, zminds] = calculate_newton_basis(KM);
+    [B, zminds] = calculate_newton_basis(KM,tol_mult);
     V = B';
     D2V = B\D2KM;
     colloc_mat = [D2V(:,2:end-1)';
@@ -115,4 +117,4 @@ xlabel('N');
 
 subplot(1,3,3)
 plot(Ns, zs_used./Ns,'b*-');
-title('percentage of points used')
+title(['percentage of points used in adaptive strategy, tol. mult. = ' num2str(tol_mult)]);
