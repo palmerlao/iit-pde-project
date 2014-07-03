@@ -10,6 +10,8 @@ u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
 pts = linspace(0,1);
 
 Ns = ceil(1.4.^(1:17));
+Ns(end-1) = 217; %218 is magic in a bad way
+zs_used = zeros(1,numel(Ns));
 num_Ns=numel(Ns);
 
 %% Calculate condition numbers of collocation matrices and
@@ -19,6 +21,7 @@ trans_err_cond = zeros(2,num_Ns);
 newt_err_cond  = zeros(2,num_Ns);
 newt2_err_cond = zeros(2,num_Ns);
 newt3_err_cond = zeros(2,num_Ns);
+figure(1);
 
 for i=1:num_Ns;
     N=Ns(i);
@@ -70,7 +73,7 @@ for i=1:num_Ns;
     newt2_err_cond(2,i) = cond(colloc_mat);
 
     %% Adaptive strategy
-    B = calculate_newton_basis(KM);
+    [B, zminds] = calculate_newton_basis(KM);
     V = B';
     D2V = B\D2KM;
     colloc_mat = [D2V(:,2:end-1)';
@@ -81,17 +84,17 @@ for i=1:num_Ns;
     newt3_err_cond(1,i) = norm(([(B\KM_evals')']*coef) ...
                               -u_analytic(pts)',Inf);
     newt3_err_cond(2,i) = cond(colloc_mat);
-    
+    zs_used(i) = numel(zminds);
 end    
 
-subplot(1,2,1);  
+subplot(1,3,1);  
 loglog(Ns, trans_err_cond(1,:), 'b*-');
 hold on;
 loglog(Ns, newt_err_cond(1,:), 'go-');
 loglog(Ns, newt2_err_cond(1,:), 'r+-');
-loglog(Ns, newt3_err_cond(1,:), 'yd-');
+loglog(Ns, newt3_err_cond(1,:), 'md-');
 
-title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n^2/16');
+title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n^2/64');
 legend('Usual basis',  ...
        'Newton basis', ...
        'differentiated kernel Newton basis', ...
@@ -100,12 +103,16 @@ ylabel('Error');
 xlabel('# of collocation points');
 
 
-subplot(1,2,2);
+subplot(1,3,2);
 semilogy(Ns, trans_err_cond(2,:), 'b*-');
 hold on;
 semilogy(Ns, newt_err_cond(2,:), 'go-');
 semilogy(Ns, newt2_err_cond(2,:), 'r+-');
-semilogy(Ns, newt3_err_cond(2,:), 'yd-');
+semilogy(Ns, newt3_err_cond(2,:), 'md-');
 title('condition number of collocation matrices for N points');
 ylabel('condition number');
 xlabel('N');
+
+subplot(1,3,3)
+plot(Ns, zs_used./Ns,'b*-');
+title('percentage of points used')

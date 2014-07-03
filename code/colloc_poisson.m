@@ -8,124 +8,121 @@ warning('off','MATLAB:nearlySingularMatrix'); % suppress cond. warnings
 f = @(x) (-5.*pi.^2.*sin(pi.*x(:,1)).*cos(2.*pi.*x(:,2)));
 g = @(x) (sin(pi.*x(:,1)).*cos(2.*pi.*x(:,2)));
 
-Ns = [3 4 5 ];
+Ns = [3:2:25];
+eN = 100;
 num_Ns=numel(Ns);
 
+trans_err_cond = zeros(2,num_Ns);
+newt_err_cond  = zeros(2,num_Ns);
+newt2_err_cond = zeros(2,num_Ns);
+newt3_err_cond = zeros(2,num_Ns);
+
 for i=1:num_Ns
-    N=Ns(i);
 
-    epsilon=15;
+    N = Ns(i);
+    epsilon = (N./8);
+    G = @(r) ( exp(-(epsilon.*r).^2) );
+    LG = @(r) ( (2.*(epsilon.^2).*G(r)).*((2.*(epsilon.*r).^2)-1) + (-2.*(epsilon.^2).*G(r)) );
 
-    K   = @(x,center) ( exp(-epsilon.*(norm(x-center).^2)) );
-    D1K = @(x,center,ind) ( -2.*epsilon.*(x(ind)-center(ind)).*K(x(ind),center(ind)) );
-    D2K = @(x,center,ind) ( 2.*epsilon.*(2.*epsilon.*((x(ind)-center(ind)).^2)-1).* ...
-                        K(x(ind),center(ind)) );
+    [cx,cy] = meshgrid(linspace(0,1,N));
+    cx=cx(:);
+    cy=cy(:);
 
-    [ex, ey] = meshgrid(linspace(0,1,10));
-    pts = [ex(:) ey(:)];
-    mesh = zeros(N,N,2);
-    [mesh(:,:,1), mesh(:,:,2)] = meshgrid(linspace(0,1,N));
-    interior_pts  = reshape(mesh(2:end-1,2:end-1,:),(N-2).^2,2,1);
-    dirichlet_pts = [ reshape(mesh(:,1,:),N,2,1);
-                      reshape(mesh(N,2:end-1,:),N-2,2,1);
-                      reshape(mesh(1,2:end-1,:),N-2,2,1);
-                      reshape(mesh(:,N,:),N,2,1); ];
+    [ex,ey] = meshgrid(linspace(0,1,eN));
+    ex=ex(:);
+    ey=ey(:);
+
+    tmp = repmat(cx,1,N.^2);
+    cdiff_1 = tmp'-tmp;
+    tmp = repmat(cy,1,N.^2);
+    cdiff_2 = tmp'-tmp;
+    crad_mat = sqrt(cdiff_1.^2+cdiff_2.^2);
+
+    tmp  = repmat(ex,1,N.^2);
+    tmp_ = repmat(cx',eN.^2,1);
+    ediff_1 = tmp-tmp_;
+    tmp  = repmat(ey,1,N.^2);
+    tmp_ = repmat(cy',eN.^2,1);
+    ediff_2 = tmp-tmp_;
+    erad_mat = sqrt(ediff_1.^2+ediff_2.^2);
+    
+    KM  = G(crad_mat);
+    EKM = G(erad_mat);
+    LKM = LG(crad_mat);
+
     dirichlet_pts_ind = [1:N N.*(2:N-1) N.*(1:N-2)+1 (N.*(N-1)+1):N.^2];
     interior_pts_ind = reshape(1:N.^2,N,N);
     interior_pts_ind = interior_pts_ind(2:end-1,2:end-1);
-    colloc_pts = reshape(mesh,N.^2,2,1);
-
-    KM  = zeros(N.^2,N.^2);
-    LKM = zeros(N.^2,N.^2);
-    EKM = zeros(size(pts,1),N.^2);
-
-    % there's probably a better way to do this
-    for j=1:N.^2
-        for k=1:N.^2
-            KM(j,k)  = K(colloc_pts(j,:), colloc_pts(k,:));
-            LKM(j,k) = D2K(colloc_pts(j,:), colloc_pts(k,:),1) + D2K(colloc_pts(j,:), colloc_pts(k,:),2);
-        end
-    end
-    for j=1:size(pts,1)
-        for k=1:N.^2
-            EKM(j,k) = K(pts(j,:), colloc_pts(k,:));
-        end
-    end
-
-    rhs = [f(colloc_pts(interior_pts_ind,:));
-           g(colloc_pts(dirichlet_pts_ind,:))];
-    % usual basis
-    colloc_mat = [LKM(interior_pts_ind,:);
-                  KM(dirichlet_pts_ind,:)];
+    interior_pts_ind = interior_pts_ind(:);
+    
+    colloc_mat = [ LKM(interior_pts_ind,:);
+                   KM(dirichlet_pts_ind,:)];
+    rhs = [ f([cx(interior_pts_ind) cy(interior_pts_ind)]);
+            g([cx(dirichlet_pts_ind) cy(dirichlet_pts_ind)]) ];
     coef = colloc_mat\rhs;
     
-    subplot(2,4,4+i);
-    meshc(ex,ey,reshape(EKM*coef,10,10));
-
-    trans_err_cond(1,i) = norm((EKM*coef)-g(pts),Inf);
+    trans_err_cond(1,i) = norm((EKM*coef)-g([ex ey]),Inf);
     trans_err_cond(2,i) = cond(colloc_mat);
-
-    % Creating a Newton basis for span{ K(\cdot, x_1), ... }
-    [B, VM] = calculate_beta_v(KM);
-    LVM = B\LKM; % maybe bad if D2KM is ill-cond.
-    colloc_mat = [LVM(:,interior_pts_ind)'
+    
+    [B,VM] = calculate_beta_v(KM);
+    LVM = B\LKM;
+    colloc_mat = [LVM(:,interior_pts_ind)';
                   VM(:,dirichlet_pts_ind)'];
     coef = colloc_mat\rhs;
 
-    newt_err_cond(1,i) = norm(([(B\EKM')']*coef)-g(pts),Inf);
+    newt_err_cond(1,i) = norm(([(B\EKM')']*coef)-g([ex ey]),Inf);
     newt_err_cond(2,i) = cond(colloc_mat);
-
-    % Creating a Newton basis for span{ LK(\cdot, x_1), ... }        
+    
     [B, LVM] = calculate_beta_v(LKM);
     VM = B\KM;
     colloc_mat = [LVM(:,interior_pts_ind)';
                   VM(:,dirichlet_pts_ind)'];
     coef = colloc_mat\rhs;
 
-    newt2_err_cond(1,i) = norm(([(B\EKM')']*coef)-g(pts),Inf);
+    newt2_err_cond(1,i) = norm(([(B\EKM')']*coef)-g([ex ey]),Inf);
     newt2_err_cond(2,i) = cond(colloc_mat);
+
+% $$$     [B, zminds] = calculate_newton_basis(KM);
+% $$$     VM = B';
+% $$$     LVM = B\LKM;
+% $$$     colloc_mat = [LVM(:,interior_pts_ind)';
+% $$$                   VM(:,dirichlet_pts_ind)'];
+% $$$     coef = colloc_mat\rhs;
+% $$$ 
+% $$$     newt3_err_cond(1,i) = norm(([(B\EKM')']*coef)-g([ex ey]),Inf);
+% $$$     if all(all(isnan(colloc_mat))) || all(all(isinf(colloc_mat)))
+% $$$         newt3_err_cond(2,i) = NaN;
+% $$$     else
+% $$$         newt3_err_cond(2,i) = cond(colloc_mat);
+% $$$     end
+% $$$     zs_used(i) = numel(zminds);
     
-    % Creating a Newton basis using the 2011 strat
-    [B,zminds] = calculate_newton_basis(KM);
-    VM = B';
-    LVM = B\LKM; % maybe bad if D2KM is ill-cond.
-    colloc_mat = [LVM(:,interior_pts_ind)'
-                  VM(:,dirichlet_pts_ind)'];
-    coef = colloc_mat\rhs;
-
-    newt3_err_cond(1,i) = norm(([(B\EKM')']*coef)-g(pts),Inf);
-    newt3_err_cond(2,i) = cond(colloc_mat);
-    subplot(2,4,i)
-    axis([-.1 1.1 -.1 1.1])
-    plot(colloc_pts(zminds,1),colloc_pts(zminds,2),'bo:');
+    %    subplot(1,num_Ns+1,i);
+    %    surfc(reshape(ex,eN,eN),reshape(ey,eN,eN),reshape(EKM*coef,eN,eN));
 end
-
-subplot(2,4,8);
-meshc(ex,ey,reshape(g(pts),10,10));
-
-figure
-subplot(1,2,1);  
-loglog(Ns, trans_err_cond(1,:), 'b*-');
-hold on;  
-loglog(Ns, newt_err_cond(1,:), 'go-');
-loglog(Ns, newt2_err_cond(1,:), 'r+-');
-loglog(Ns, newt3_err_cond(1,:), 'yd-');
-
-title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n^2/16');
+%subplot(1,num_Ns+1,num_Ns+1)
+%surfc(reshape(ex,eN,eN),reshape(ey,eN,eN),reshape(g([ex ey]),eN,eN));
+subplot(1,2,1);
+loglog(Ns.^2,trans_err_cond(1,:),'b*-');
+hold on;
+loglog(Ns.^2, newt_err_cond(1,:), 'go-');
+loglog(Ns.^2, newt2_err_cond(1,:), 'r+-');
+%loglog(Ns.^2, newt3_err_cond(1,:), 'md-');
+title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n/8');
 legend('Usual basis',  ...
        'Newton basis', ...
        'differentiated kernel Newton basis', ...
-       'Newton basis (2011)');
+       '2011 Newton basis');
 ylabel('Error');
 xlabel('# of collocation points');
 
 
 subplot(1,2,2);
-semilogy(Ns, trans_err_cond(2,:), 'b*-');
+semilogy(Ns.^2,trans_err_cond(2,:),'b*-');
 hold on;
-semilogy(Ns, newt_err_cond(2,:), 'go-');
-semilogy(Ns, newt2_err_cond(2,:), 'r+-');
-semilogy(Ns, newt3_err_cond(2,:), 'yd-');
+semilogy(Ns.^2, newt_err_cond(2,:), 'go-');
+semilogy(Ns.^2, newt2_err_cond(2,:), 'r+-');
+%semilogy(Ns.^2, newt3_err_cond(2,:), 'md-');
 title('condition number of collocation matrices for N points');
 ylabel('condition number');
 xlabel('N');
