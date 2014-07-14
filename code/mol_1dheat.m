@@ -4,8 +4,8 @@ u_analytic = @(x,t) ( 2.*sin(pi.*x./2).*exp(-(pi/4).^2.*t) ...
                       - sin(pi.*x).*exp(-(pi./2).^2.*t) ...
                       - sin(2.*pi.*x).*exp(-(pi).^2.*t));
 
-N = 10;
-epsilon = 0.4;
+N = 25;
+epsilon = (N/8);
 K   = @(x,center) ( exp(-epsilon.*((x-center).^2)) );
 D1K = @(x,center) ( -2.*epsilon.*(x-center).*K(x,center) );
 D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).* ...
@@ -14,10 +14,14 @@ D2K = @(x,center) ( 2.*epsilon.*(2.*epsilon.*((x-center).^2)-1).* ...
 colloc_pts = linspace(0,2,N);
 pts = linspace(0,2);
 tmp = repmat(colloc_pts,N,1);
+
 KM = K(tmp',tmp);
 D2KM = D2K(tmp',tmp);
-[VM,B] = calculate_beta_v(KM);
-D2VM = B\D2KM;
+
+[B, zminds, was_inc] = calculate_newton_basis(KM,10);
+B = B(zminds,:);
+VM = B';
+D2VM = B\D2KM(zminds,zminds);
 
 D_usual = D2KM/KM;
 D_newton = D2VM/VM;
@@ -29,6 +33,7 @@ u_usual = zeros(length(disc_time),length(ic));
 u_usual(1,:) = ic;
 u_newton = zeros(length(disc_time),length(ic));
 u_newton(1,:) = ic;
+u_newton = u_newton(:,was_inc(zminds));
 
 % explicit euler
 for i=2:length(disc_time)
@@ -48,7 +53,7 @@ figure;
 for i=1:length(disc_time)
     plot(pts,u_analytic(pts,disc_time(i)), ...
          colloc_pts,u_usual(i,:),'gd:', ...
-         colloc_pts,u_newton(i,:),'rd');
+         colloc_pts(was_inc),u_newton(i,:),'rd');
     axis([0 2 -1 5]);
     M(i) = getframe;
 end

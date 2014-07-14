@@ -11,18 +11,18 @@ pts = linspace(0,1);
 
 tol_mult = 10;
 
-Ns = ceil(1.4.^(1:17));
-Ns(end-1) = 217; %218 is magic in a bad way
+Ns = ceil(1.4.^[1:17 20]);
+Ns(Ns==218) = 217; %218 is magic in a bad way
 zs_used = zeros(1,numel(Ns));
 num_Ns=numel(Ns);
 
 %% Calculate condition numbers of collocation matrices and
 %  calculate error of numerical solutions
 
-trans_err_cond = zeros(2,num_Ns);
-newt_err_cond  = zeros(2,num_Ns);
-newt2_err_cond = zeros(2,num_Ns);
-newt3_err_cond = zeros(2,num_Ns);
+trans_err_cond = nan(2,num_Ns);
+newt_err_cond  = nan(2,num_Ns);
+newt2_err_cond = nan(2,num_Ns);
+newt3_err_cond = nan(2,num_Ns);
 figure(1);
 
 for i=1:num_Ns;
@@ -75,18 +75,30 @@ for i=1:num_Ns;
     newt2_err_cond(2,i) = cond(colloc_mat);
 
     %% Adaptive strategy
-    [B, zminds] = calculate_newton_basis(KM,tol_mult);
-    V = B';
-    D2V = B\D2KM;
-    colloc_mat = [D2V(:,2:end-1)';
-                  V(:,1)';
-                  V(:,N)'];
-    coef = colloc_mat\[rhs(colloc_pts(2:end-1))';0;0;];
+    tol_too_strict = true;
+    while tol_too_strict
+        tol_too_strict = false;
+        [B, zminds] = calculate_newton_basis(KM,tol_mult);
+        V = B';
+        D2V = B\D2KM;
+        colloc_mat = [D2V(:,2:end-1)';
+                      V(:,1)';
+                      V(:,N)'];
+        coef = colloc_mat\[rhs(colloc_pts(2:end-1))';0;0;];
 
-    newt3_err_cond(1,i) = norm(([(B\KM_evals')']*coef) ...
-                              -u_analytic(pts)',Inf);
-    newt3_err_cond(2,i) = cond(colloc_mat);
-    zs_used(i) = numel(zminds);
+        newt3_err_cond(1,i) = norm(([(B\KM_evals')']*coef) ...
+                                   -u_analytic(pts)',Inf);
+        try
+            newt3_err_cond(2,i) = cond(colloc_mat);
+        catch exception
+            disp('could not calculate cond');
+            tol_too_strict = true;
+            tol_mult = tol_mult + 1;
+        end
+        
+        zs_used(i) = numel(zminds);
+    end
+    tol_mult = 10;
 end    
 
 subplot(1,3,1);  
