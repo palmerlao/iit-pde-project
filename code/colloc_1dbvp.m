@@ -9,7 +9,9 @@ u_analytic = @(x) ( 0.25.*((2.*x.^2)-exp(2).*x-x+exp(2.*x)-1) );
 
 pts = linspace(0,1);
 
-tol_mult = 10;
+default_tol_mult = 10;
+tol_mult = default_tol_mult;
+maxitr = 25;
 
 Ns = ceil(1.4.^[1:17 20]);
 Ns(Ns==218) = 217; %218 is magic in a bad way
@@ -23,6 +25,7 @@ trans_err_cond = nan(2,num_Ns);
 newt_err_cond  = nan(2,num_Ns);
 newt2_err_cond = nan(2,num_Ns);
 newt3_err_cond = nan(2,num_Ns);
+newt4_err_cond = nan(2,num_Ns);
 figure(1);
 
 for i=1:num_Ns;
@@ -50,7 +53,6 @@ for i=1:num_Ns;
     trans_err_cond(2,i) = cond(colloc_mat);
 
     %% Creating a Newton basis for span{ K(\cdot, x_1), ... }
-    %    [B, V] = calculate_beta_v(KM);
     [B,V] = calculate_beta_v(KM);
     D2V = B\D2KM;
     colloc_mat = [D2V(:,2:end-1)';
@@ -76,7 +78,9 @@ for i=1:num_Ns;
 
     %% Adaptive strategy
     tol_too_strict = true;
-    while tol_too_strict
+    tol_mult = default_tol_mult;
+    itr = 1;
+    while tol_too_strict && itr<maxitr
         tol_too_strict = false;
         [B, zminds] = calculate_newton_basis(KM,tol_mult);
         V = B';
@@ -97,36 +101,35 @@ for i=1:num_Ns;
         end
         
         zs_used(i) = numel(zminds);
+        itr = itr + 1;
     end
-    tol_mult = 10;
 end    
 
 subplot(1,3,1);  
 loglog(Ns, trans_err_cond(1,:), 'b*-');
 hold on;
 loglog(Ns, newt_err_cond(1,:), 'go-');
-loglog(Ns, newt2_err_cond(1,:), 'r+-');
-loglog(Ns, newt3_err_cond(1,:), 'md-');
+loglog(Ns, newt2_err_cond(1,:), 'ro-');
+loglog(Ns, newt3_err_cond(1,:), 'm+-');
 
-title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n^2/64');
+title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n/8');
 legend('Usual basis',  ...
-       'Newton basis', ...
-       'differentiated kernel Newton basis', ...
-       '2011 Newton basis');
+       'overconstrained Newton basis', ...
+       'differentiated Newton basis', ...
+       '2011 Newton basis')
 ylabel('Error');
 xlabel('# of collocation points');
-
 
 subplot(1,3,2);
 semilogy(Ns, trans_err_cond(2,:), 'b*-');
 hold on;
-semilogy(Ns, newt_err_cond(2,:), 'go-');
-semilogy(Ns, newt2_err_cond(2,:), 'r+-');
-semilogy(Ns, newt3_err_cond(2,:), 'md-');
+loglog(Ns, newt_err_cond(2,:), 'go-');
+loglog(Ns, newt2_err_cond(2,:), 'ro-');
+loglog(Ns, newt3_err_cond(2,:), 'm+-');
 title('condition number of collocation matrices for N points');
 ylabel('condition number');
 xlabel('N');
 
 subplot(1,3,3)
-plot(Ns, zs_used./Ns,'b*-');
+plot(Ns, zs_used./Ns,'m+-');
 title(['percentage of points used in adaptive strategy, tol. mult. = ' num2str(tol_mult)]);

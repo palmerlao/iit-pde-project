@@ -8,11 +8,12 @@ warning('off','MATLAB:nearlySingularMatrix'); % suppress cond. warnings
 f = @(x) (-5.*pi.^2.*sin(pi.*x(:,1)).*cos(2.*pi.*x(:,2)));
 g = @(x) (sin(pi.*x(:,1)).*cos(2.*pi.*x(:,2)));
 
-Ns = [3:2:25];
+Ns = [3:2:30];
 eN = 100;
 num_Ns=numel(Ns);
 
-tol_mult = 30;
+tol_mult = 10;
+maxitr = 30;
 
 trans_err_cond = zeros(2,num_Ns);
 newt_err_cond  = zeros(2,num_Ns);
@@ -84,21 +85,30 @@ for i=1:num_Ns
     newt2_err_cond(1,i) = norm(([(B\EKM')']*coef)-g([ex ey]),Inf);
     newt2_err_cond(2,i) = cond(colloc_mat);
 
-    [B, zminds] = calculate_newton_basis(KM,tol_mult);
-    VM = B';
-    LVM = B\LKM;
-    colloc_mat = [LVM(:,interior_pts_ind)';
-                  VM(:,dirichlet_pts_ind)'];
-    coef = colloc_mat\rhs;
+    tol_too_strict = true;
+    tol_mult = 10;
+    itr = 1;
+    while tol_too_strict && itr<maxitr
+        tol_too_strict = false;
+        [B, zminds] = calculate_newton_basis(KM,tol_mult);
+        VM = B';
+        LVM = B\LKM;
+        colloc_mat = [LVM(:,interior_pts_ind)';
+                      VM(:,dirichlet_pts_ind)'];
+        coef = colloc_mat\rhs;
 
-    newt3_err_cond(1,i) = norm(([(B\EKM')']*coef)-g([ex ey]),Inf);
-    if all(all(isnan(colloc_mat))) || all(all(isinf(colloc_mat)))
-        newt3_err_cond(2,i) = NaN;
-    else
-        newt3_err_cond(2,i) = cond(colloc_mat);
+        newt3_err_cond(1,i) = norm(([(B\EKM')']*coef)-g([ex ey]),Inf);
+        try
+            newt3_err_cond(2,i) = cond(colloc_mat);
+        catch exception
+            disp('could not calculate cond');
+            tol_too_strict = true;
+            tol_mult = tol_mult + 1;
+        end
+        
+        zs_used(i) = numel(zminds);
+        itr = itr + 1;
     end
-    zs_used(i) = numel(zminds);
-    
     %    subplot(1,num_Ns+1,i);
     %    surfc(reshape(ex,eN,eN),reshape(ey,eN,eN),reshape(EKM*coef,eN,eN));
 end
@@ -108,11 +118,11 @@ subplot(1,3,1);
 loglog(Ns.^2,trans_err_cond(1,:),'b*-');
 hold on;
 loglog(Ns.^2, newt_err_cond(1,:), 'go-');
-loglog(Ns.^2, newt2_err_cond(1,:), 'r+-');
-loglog(Ns.^2, newt3_err_cond(1,:), 'md-');
+loglog(Ns.^2, newt2_err_cond(1,:), 'ro-');
+loglog(Ns.^2, newt3_err_cond(1,:), 'm+-');
 title('Maximum error on 100 evenly spaced pts, when \epsilon_n=n/8');
 legend('Usual basis',  ...
-       'Newton basis', ...
+       'overconstrained Newton basis', ...
        'differentiated kernel Newton basis', ...
        '2011 Newton basis');
 ylabel('Error');
@@ -123,12 +133,12 @@ subplot(1,3,2);
 semilogy(Ns.^2,trans_err_cond(2,:),'b*-');
 hold on;
 semilogy(Ns.^2, newt_err_cond(2,:), 'go-');
-semilogy(Ns.^2, newt2_err_cond(2,:), 'r+-');
-semilogy(Ns.^2, newt3_err_cond(2,:), 'md-');
+semilogy(Ns.^2, newt2_err_cond(2,:), 'ro-');
+semilogy(Ns.^2, newt3_err_cond(2,:), 'm+-');
 title('condition number of collocation matrices for N points');
 ylabel('condition number');
 xlabel('# of collocation points');
 
 subplot(1,3,3)
-plot(Ns.^2, zs_used./(Ns.^2),'b*-');
-title(['percentage of points used in adaptive strategy, tol. mult. = ' num2str(tol_mult)]);
+plot(Ns.^2, zs_used./(Ns.^2),'m+-');
+title(['percentage of points used in adaptive strategy']);
