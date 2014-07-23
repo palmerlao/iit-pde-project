@@ -3,12 +3,12 @@ set(0,'defaultLineLineWidth',3) % thick lines
 
 
 count = 1;
-NStart = 1;
-NEnd = 200;
+NStart = 0;
+NEnd = 8;
 
-NVector = NStart:1:NEnd;
+NVector = floor(2.^(NStart:1:NEnd));
 
-f=@(x) 3 + 2*x;
+f=@(x) 3*x+sin(20*x);
 
 
 errS = zeros(1, NEnd - NStart);
@@ -41,7 +41,7 @@ for N = NVector
                     ones(1, N) 0 0;
                     samplePoints 0 0];
                 
-     fAppxN = [KMatrix ones(N,1) samplePoints']*(VMatrixTilda\[fsample; 0; 0]);
+     fAppxN = [VMatrix ones(N,1) samplePoints']*(VMatrixTilda\[fsample; 0; 0]);
      %% Errors
      
      errS(count) = max(abs(fAppx-fsample));
@@ -52,10 +52,14 @@ end
 
 
 %keyboard;
-plot(samplePoints, fsample, 'b', samplePoints, fAppx, 'g', samplePoints, fAppxN, 'c');
+plot(samplePoints, fsample, 'g', samplePoints, fAppx, 'b', samplePoints, fAppxN, 'r');
+legend('Sample Function', 'Kernel Basis', 'Newton Basis')
+title('Function and Approximations')
 
 figure
-plot(NVector, errS, 'g', NVector, errN, 'c')
+plot(NVector, errS, 'b', NVector, errN, 'r')
 xlabel('number of points')
 ylabel('absolute error')
+legend('Kernel Basis', 'Newton Basis')
+title('Absolute Error')
 

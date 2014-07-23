@@ -101,7 +101,7 @@ for N = NVector
 count = count+1;
 end
 
-    subplot(1, 2, 1);
+    
     semilogy(NVector, (condPlotK), ':b')
     hold on;
     semilogy(NVector, (condPlotKTilda), 'b')
@@ -118,7 +118,7 @@ end
     xlabel('Number of points sampled');
 
 
-   subplot(1, 2, 2);
+   figure;
     hold on;
     plot(NVector, (condPlotK./condPlotL), ':g')
     plot(NVector, (condPlotKTilda./condPlotLTilda), 'g')
