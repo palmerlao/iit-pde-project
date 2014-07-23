@@ -79,6 +79,9 @@
 \usepackage{graphicx} % Allows including images
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
 
+\usepackage[author-year]{amsrefs}
+
+
 %----------------------------------------------------------------------------------------
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
@@ -109,7 +112,7 @@ Illinois Institute of Technology, Clarkson University \\ % Your institution for 
 \frametitle{Motivation}
 \begin{itemize}
 \item Standard interpolation: given a set of data $f(x_i)=\{x_1, x_2, ... x_n\}$, find a function $s(x)$ that exactly fits all of these points.
-\item According to a paper by Robert Schaback (2011), there exists a basis called the Newton Basis which has better conditioning than the typical Kernel Basis.
+\item According to \ocite{MulSch09a} and \ocite{PazSch11a}, there exists a basis called the Newton Basis which has better conditioning than the typical Kernel Basis.
 \item Palmer's stuff here
 \end{itemize}
 \end{frame}
@@ -155,6 +158,10 @@ Illinois Institute of Technology, Clarkson University \\ % Your institution for 
 \frametitle{Interpolation and Absolute Error}
 \includegraphics[scale =.45]{functionError}
 %put error graph here
+\end{frame}
+
+\begin{frame}\frametitle{References}
+\bibliography{FJH22,FJHown22}
 \end{frame}
 
 %------------------------------------------------
