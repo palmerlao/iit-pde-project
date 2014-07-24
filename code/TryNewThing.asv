@@ -33,7 +33,7 @@ for N = NVector
 
     uK=[KMatrix ones(N,1) samplePoints']*(KMatrixTilda\[fsample;0;0]);
     
-    fAppx = ([K(samplePoints2', samplePoints) ones(N,1) samplePoints']*(KMatrixTilda\[fsample;0;0]));
+    fAppx = ([K(temp', temp) ones(N,1) samplePoints']*(KMatrixTilda\[fsample;0;0]));
     %% Newton Basis
     
      [B, VMatrix] = calculate_beta_v(KMatrix);
@@ -47,7 +47,7 @@ for N = NVector
      
      errS(count) = max(abs(fAppx-fsample));
      errN(count) = max(abs(fAppxN-fsample));
-     %pFun = sqrt(K(samplePoints,samplePoints)-
+     
      
      count = count + 1;
 end
