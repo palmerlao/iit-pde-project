@@ -30,7 +30,7 @@
 %\usetheme{Berkeley}
 %\usetheme{Berlin}
 %\usetheme{Boadilla}
-%\usetheme{CambridgeUS}
+\usetheme{CambridgeUS}
 %\usetheme{Copenhagen}
 %\usetheme{Darmstadt}
 %\usetheme{Dresden}
@@ -40,7 +40,7 @@
 %\usetheme{Ilmenau}
 %\usetheme{JuanLesPins}
 %\usetheme{Luebeck}
-\usetheme{Madrid}
+%\usetheme{Madrid}
 %\usetheme{Malmoe}
 %\usetheme{Marburg}
 %\usetheme{Montpellier}
@@ -78,7 +78,8 @@
 
 \usepackage{graphicx} % Allows including images
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
-
+\usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage[author-year]{amsrefs}
 
 
@@ -86,14 +87,14 @@
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
 
-\title[Newton Bases and PDEs]{Kernel Newton Bases for solving PDEs} % The short title appears at the bottom of every slide, the full title is only on the title page
+\title[Newton Bases for Interpolation]{Kernel Newton Bases for Interpolation} % The short title appears at the bottom of every slide, the full title is only on the title page
 
-\author{Tim McCollam, Palmer Lao} % Your name
-\institute[IIT, CU] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+\author{Tim McCollam} % Your name
+\institute[IIT] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
 {
-Illinois Institute of Technology, Clarkson University \\ % Your institution for the title page
+Illinois Institute of Technology \\ % Your institution for the title page
 \medskip
-\textit{tmccolla@hawk.iit.edu, laopa@clarkson.edu} % Your email address
+\textit{tmccolla@hawk.iit.edu} % Your email address
 }
 \date{\today} % Date, can be changed to a custom date
 
@@ -109,11 +110,26 @@ Illinois Institute of Technology, Clarkson University \\ % Your institution for 
 
 
 \begin{frame}
-\frametitle{Motivation}
+\frametitle{Introduction}
 \begin{itemize}
-\item Standard interpolation: given a set of data $f(x_i)=\{x_1, x_2, ... x_n\}$, find a function $s(x)$ that exactly fits all of these points.
+\item Standard interpolation: given a set of data $f(x_i)=\{x_1, x_2, ... , x_n\}$, find a function $\tilde{f}(x)$ that exactly fits all of these points.
+\item We assume that $\tilde{f}(x)$ is a linear combination of a data-dependent basis. 
+\begin{itemize}
+\item i.e. $\tilde{f}(x) = \sum\limits^{n}_{k=1}c_{k}K_{k}(x)$ which leads to the equation $\mathsf{K}\textbf{c}=\textbf{y}$ for which we need to solve for $\textbf{c}$.
+\end{itemize}
+\item So, we need to choose an appropriate $\mathsf{K}$ (i.e. an appropriate basis) which is invertable and does not have conditioning issues.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Introduction}
+\begin{itemize}
+\item A common basis used is the Kernel Basis: use radial basis functions such as the Gaussian $K(x_i,x_j)=e^{\epsilon^2\|x_i-x_j\|^2}$ to construct the matrix.
+\begin{itemize}
+\item $\mathsf{K}=(K(x_i,x_j))^{n}_{i,j=1}$
+\end{itemize}
 \item According to \ocite{MulSch09a} and \ocite{PazSch11a}, there exists a basis called the Newton Basis which has better conditioning than the typical Kernel Basis.
-\item Palmer's stuff here
 \end{itemize}
 \end{frame}
 
@@ -125,13 +141,40 @@ Illinois Institute of Technology, Clarkson University \\ % Your institution for 
 	\begin{itemize}
 	\item $v_j(x_i)=0$ for $i<j$
 	\item $v_j(x_j)=1$
-	\item span$\{v_1, ... v_n\}=$ span$\{k_1, ... k_n\}$ where the $k_i$'s are the standard Kernel Basis.
+	\item span$\{v_1, ... , v_m\}=$ span$\{k_1, ... k_n\}$ where the $k_i$'s are the standard Kernel Basis.
 	\end{itemize}
-\item We calculate the Newton Matrix with $\beta_{ij}=K(x_i,x_j)-\sum\limits^{i-1}_{k=0}{\beta_{jk}v_{k}(x_i)}$
+\item We calculate the Newton Matrix $\mathsf{V}$ with: 
 \begin{itemize}
-\item Where $\beta_{ij}$ is the element in the $i$th row, $j$th column of the Newton Matrix,  and $v_j(x) = \prod_{i=0}^{j-1}(x-x_i)$.
+\item $\beta_{ij}=K(x_i,x_j)-\sum\limits^{i-1}_{k=0}{\beta_{jk}v_{k}(x_i)}$ for $i\leq j$
+\item  $\beta_{ij}= 0$ for $i>j$
 \end{itemize}
 \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Newton Basis}
+\begin{itemize}
+\item We also add the ability to exactly interpolate linear equations by adding $\alpha_1+\alpha_2 x$ to $\tilde{f}(x)$. This results in the matrix
+$\tilde{\mathsf{V}}=$$\begin{bmatrix}
+\mathsf{V}&\mathsf{P}^T\\\mathsf{P}&0
+\end{bmatrix}$
+where
+$\mathsf{P}=\begin{bmatrix}
+1&...&1\\
+x_1 &... &x_n
+\end{bmatrix}$
+\item We then adjust the original equation that needs to be solved to\\ $\tilde{\mathsf{V}}$
+$\begin{bmatrix}
+\mathbf{c}\\
+\alpha_1\\
+\alpha_2 x
+\end{bmatrix}=\begin{bmatrix}
+\mathbf{y}\\
+\mathbf{0}
+\end{bmatrix}$ \\
+and we add the conditions that \\$\sum\limits^n_{k=1}c_k = 0$ and \\$\sum\limits^n_{k=1}c_{k}x_k = 0$
+\end{itemize}
+\nocite{fass07}
 \end{frame}
 
 \begin{frame}
@@ -141,21 +184,21 @@ Illinois Institute of Technology, Clarkson University \\ % Your institution for 
 
 \begin{frame}
 \frametitle{Interpolation}
-\begin{itemize}
-\item Interpolation with the Newton Basis is very similar to interpolation with the Kernel Basis.
-\item Normally, the function is approximated by $\tilde{f}(x)=\textbf{k}^{T}\underline{K}^{-1}\textbf{y}$ (power functions).
-\item Simply replace the Kernel Matrix and Vector with the Newton Matrix and Vector.
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Interpolation and Absolute Error}
 \includegraphics[scale = .45]{functionAppx}
 %put interpolation graph here
 \end{frame}
 
 \begin{frame}
-\frametitle{Interpolation and Absolute Error}
+\frametitle{Error Estimation}
+\begin{itemize}
+\item By the method of power functions, $\|f(x)-\tilde{f}(x)\| \leq \|f\|\sqrt{K(x, x)-\mathbf{k}^T(x)\mathsf{K}^{-1}\mathbf{k}(x)}$
+\item Similarly, for the Newton Basis  $\|f(x)-\tilde{f}(x)\| \leq \|f\|\sqrt{K(x, x)-\mathbf{v}^T(x)\mathsf{V}^{-1}\mathbf{v}(x)}$
+\item \cite{fass07}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Error}
 \includegraphics[scale =.45]{functionError}
 %put error graph here
 \end{frame}
@@ -167,7 +210,7 @@ Illinois Institute of Technology, Clarkson University \\ % Your institution for 
 %------------------------------------------------
 
 \begin{frame}
-\Huge{\centerline{Thanks!}}
+\Huge{\centerline{Thank You!}}
 \end{frame}
 
 %----------------------------------------------------------------------------------------

@@ -3,6 +3,14 @@
 \begin{bibdiv}
 \begin{biblist}
 
+\bib{fass07}{book}{
+      author={Fasshauer, G.},
+       title={Meshfree approximation methods with matlab},
+   publisher={World Scientific},
+     address={Chicago},
+        date={2007},
+}
+
 \bib{MulSch09a}{article}{
       author={M\"uller, S.},
       author={Schaback, R.},
