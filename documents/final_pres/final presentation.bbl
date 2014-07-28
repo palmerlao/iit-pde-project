@@ -1,0 +1,27 @@
+\def\Ignore#1{}\def\notesupp#1{}\def\Ignore#1{}\def\notesupp#1{}
+% \bib, bibdiv, biblist are defined by the amsrefs package.
+\begin{bibdiv}
+\begin{biblist}
+
+\bib{MulSch09a}{article}{
+      author={M\"uller, S.},
+      author={Schaback, R.},
+       title={A {N}ewton basis for kernel spaces},
+        date={2009},
+     journal={J. Approx.\ Theory},
+      volume={161},
+       pages={645\ndash 655},
+}
+
+\bib{PazSch11a}{article}{
+      author={Pazouki, M.},
+      author={Schaback, R.},
+       title={Bases for kernel-based spaces},
+        date={2011},
+     journal={J. Comput.\ Appl.\ Math.},
+      volume={236},
+       pages={575\ndash 588},
+}
+
+\end{biblist}
+\end{bibdiv}
